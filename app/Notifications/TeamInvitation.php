@@ -34,16 +34,16 @@ class TeamInvitation extends Notification
      */
     public function toMail(object $notifiable): MailMessage
     {
-        $invitationUrl = route('invitation.accept', ['token' => $this->invitation->invite_token]);
+        $invitationUrl = route('invitation.show', ['token' => $this->invitation->invite_token]);
         $inviterName = $this->invitation->invitedBy->full_name;
         $companyName = $this->invitation->company->name;
 
         return (new MailMessage())
-            ->subject("You've been invited to join {$companyName}")
+            ->subject("{$inviterName} invited you to join {$companyName}")
             ->greeting('Hello!')
             ->line("{$inviterName} has invited you to join {$companyName}.")
-            ->line('Click the button below to accept the invitation and set up your account.')
-            ->action('Accept Invitation', $invitationUrl)
+            ->line('Click the button below to accept the invitation and create your account.')
+            ->action('Accept & Join ' . $companyName, $invitationUrl)
             ->line('This invitation will expire in ' . config('signup.invitation_token_expiry_days') . ' days.')
             ->line('If you were not expecting this invitation, you can safely ignore this email.');
     }

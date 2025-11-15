@@ -15,10 +15,14 @@
         @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
             @vite(['resources/css/app.css', 'resources/js/app.js'])
         @else
-            <style>
-                /* Same Tailwind CSS from welcome.blade.php */
-                @import url('{{ asset('build/app.css') }}');
-            </style>
+            <!-- Tailwind Configuration -->
+            <script>
+                window.tailwindConfig = {
+                    darkMode: 'class'
+                }
+            </script>
+            <!-- Tailwind CSS CDN -->
+            <script src="https://cdn.tailwindcss.com"></script>
         @endif
     </head>
     <body class="bg-[#FDFDFC] dark:bg-[#0a0a0a] text-[#1b1b18] dark:text-[#EDEDEC] flex p-6 lg:p-8 items-center justify-center min-h-screen">
@@ -37,5 +41,8 @@
                 @yield('footer')
             </div>
         </div>
+
+        <!-- Alpine.js - Load at end of body -->
+        <script src="//unpkg.com/alpinejs" defer></script>
     </body>
 </html>

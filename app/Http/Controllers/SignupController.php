@@ -222,6 +222,9 @@ class SignupController extends Controller
             // Associate user with company as owner
             $company->users()->attach(Auth::id(), ['role' => 'owner']);
 
+            // Create default built-in workflows
+            $company->createDefaultWorkflows();
+
             // Store company ID in session
             session(['signup_company_id' => $company->id, 'signup_step_2_complete' => true]);
         });

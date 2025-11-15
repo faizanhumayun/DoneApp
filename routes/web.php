@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('signup.email');
 });
 
 // Signup Routes
@@ -37,20 +37,35 @@ Route::prefix('signup')->name('signup.')->group(function () {
     Route::post('/team/skip', [SignupController::class, 'skipTeam'])->name('team.skip');
 });
 
-// Dashboard (placeholder for now)
+// Dashboard
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware('auth')->name('dashboard');
 
-// Login (placeholder for now)
-Route::get('/login', function () {
-    return view('auth.login');
-})->name('login');
+// Workflows
+Route::middleware('auth')->group(function () {
+    Route::get('/workflows', [App\Http\Controllers\WorkflowController::class, 'index'])->name('workflows.index');
+    Route::get('/workflows/create', [App\Http\Controllers\WorkflowController::class, 'create'])->name('workflows.create');
+    Route::post('/workflows', [App\Http\Controllers\WorkflowController::class, 'store'])->name('workflows.store');
+    Route::get('/workflows/{workflow}/edit', [App\Http\Controllers\WorkflowController::class, 'edit'])->name('workflows.edit');
+    Route::put('/workflows/{workflow}', [App\Http\Controllers\WorkflowController::class, 'update'])->name('workflows.update');
+    Route::delete('/workflows/{workflow}', [App\Http\Controllers\WorkflowController::class, 'destroy'])->name('workflows.destroy');
+    Route::post('/workflows/{workflow}/duplicate', [App\Http\Controllers\WorkflowController::class, 'duplicate'])->name('workflows.duplicate');
+});
+
+// Profile
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+});
+
+// Login
+Route::get('/login', [App\Http\Controllers\LoginController::class, 'show'])->name('login');
+Route::post('/login', [App\Http\Controllers\LoginController::class, 'login'])->name('login.submit');
 
 // Logout
-Route::post('/logout', function () {
-    Auth::logout();
-    request()->session()->invalidate();
-    request()->session()->regenerateToken();
-    return redirect('/');
-})->middleware('auth')->name('logout');
+Route::post('/logout', [App\Http\Controllers\LoginController::class, 'logout'])->middleware('auth')->name('logout');
+
+// Team Invitation Acceptance
+Route::get('/invitation/accept', [App\Http\Controllers\InvitationController::class, 'show'])->name('invitation.show');
+Route::post('/invitation/accept', [App\Http\Controllers\InvitationController::class, 'accept'])->name('invitation.accept.submit');
