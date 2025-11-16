@@ -25,6 +25,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'timezone',
         'about_yourself',
+        'profile_image',
     ];
 
     /**
@@ -66,5 +67,30 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getFullNameAttribute(): string
     {
         return "{$this->first_name} {$this->last_name}";
+    }
+
+    /**
+     * Get the user's avatar URL.
+     * Returns uploaded image or auto-generated avatar.
+     */
+    public function getAvatarUrlAttribute(): string
+    {
+        if ($this->profile_image && file_exists(public_path('storage/' . $this->profile_image))) {
+            return asset('storage/' . $this->profile_image);
+        }
+
+        // Generate avatar using UI Avatars with user's initials
+        $name = urlencode($this->first_name . ' ' . $this->last_name);
+        return "https://ui-avatars.com/api/?name={$name}&size=200&background=3B82F6&color=ffffff&bold=true";
+    }
+
+    /**
+     * Get the user's initials for avatar.
+     */
+    public function getInitialsAttribute(): string
+    {
+        $firstInitial = strtoupper(substr($this->first_name, 0, 1));
+        $lastInitial = strtoupper(substr($this->last_name, 0, 1));
+        return $firstInitial . $lastInitial;
     }
 }

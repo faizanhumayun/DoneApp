@@ -171,9 +171,11 @@
                             @click="open = !open"
                             class="flex items-center gap-2 p-1 hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a] rounded-sm transition-all">
                             <!-- User Avatar -->
-                            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold">
-                                {{ substr(auth()->user()->first_name, 0, 1) }}{{ substr(auth()->user()->last_name, 0, 1) }}
-                            </div>
+                            <img
+                                src="{{ auth()->user()->avatar_url }}"
+                                alt="{{ auth()->user()->full_name }}"
+                                class="w-8 h-8 rounded-full object-cover border-2 border-[#e3e3e0] dark:border-[#3E3E3A]"
+                            >
                             <!-- Caret -->
                             <svg class="w-4 h-4 text-[#706f6c] dark:text-[#A1A09A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>

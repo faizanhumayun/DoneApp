@@ -29,9 +29,91 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('profile.update') }}" class="space-y-6" x-data="{ showPassword: false, showPasswordConfirmation: false, showCurrentPassword: false }">
+            <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="space-y-6" x-data="{
+                showPassword: false,
+                showPasswordConfirmation: false,
+                showCurrentPassword: false,
+                imagePreview: '{{ $user->avatar_url }}',
+                removeImage: false,
+                updateImagePreview(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            this.imagePreview = e.target.result;
+                            this.removeImage = false;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                },
+                removeProfileImage() {
+                    this.removeImage = true;
+                    this.imagePreview = 'https://ui-avatars.com/api/?name={{ urlencode($user->first_name . ' ' . $user->last_name) }}&size=200&background=3B82F6&color=ffffff&bold=true';
+                    document.getElementById('profile_image').value = '';
+                }
+            }">
                 @csrf
                 @method('PUT')
+
+                <!-- Profile Image Card -->
+                <div class="bg-white dark:bg-[#161615] rounded-lg shadow-sm p-6 border border-[#e3e3e0] dark:border-[#3E3E3A]">
+                    <h2 class="text-xl font-semibold mb-6">Profile Picture</h2>
+
+                    <div class="flex items-start gap-6">
+                        <!-- Profile Image Preview -->
+                        <div class="flex-shrink-0">
+                            <img
+                                :src="imagePreview"
+                                alt="Profile Picture"
+                                class="w-32 h-32 rounded-full object-cover border-4 border-[#e3e3e0] dark:border-[#3E3E3A]"
+                            >
+                        </div>
+
+                        <!-- Upload Controls -->
+                        <div class="flex-1 space-y-4">
+                            <div>
+                                <label for="profile_image" class="block text-sm font-medium mb-2">
+                                    Upload New Picture
+                                </label>
+                                <input
+                                    type="file"
+                                    id="profile_image"
+                                    name="profile_image"
+                                    accept="image/jpeg,image/jpg,image/png,image/gif"
+                                    @change="updateImagePreview($event)"
+                                    class="block w-full text-sm text-[#706f6c] dark:text-[#A1A09A]
+                                           file:mr-4 file:py-2 file:px-4
+                                           file:rounded-sm file:border-0
+                                           file:text-sm file:font-medium
+                                           file:bg-[#f5f5f5] dark:file:bg-[#0a0a0a]
+                                           file:text-[#1b1b18] dark:file:text-[#EDEDEC]
+                                           hover:file:bg-[#e3e3e0] dark:hover:file:bg-[#1C1C1A]
+                                           file:cursor-pointer cursor-pointer"
+                                >
+                                <p class="text-xs text-[#706f6c] dark:text-[#A1A09A] mt-1">
+                                    JPG, PNG or GIF. Max size 2MB.
+                                </p>
+                            </div>
+
+                            @if($user->profile_image)
+                                <div>
+                                    <button
+                                        type="button"
+                                        @click="removeProfileImage()"
+                                        class="text-sm text-red-600 dark:text-red-400 hover:underline"
+                                    >
+                                        Remove Profile Picture
+                                    </button>
+                                    <input type="hidden" name="remove_profile_image" :value="removeImage ? '1' : '0'">
+                                </div>
+                            @endif
+
+                            <p class="text-xs text-[#706f6c] dark:text-[#A1A09A]">
+                                If no image is uploaded, an auto-generated avatar with your initials will be displayed.
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Personal Information Card -->
                 <div class="bg-white dark:bg-[#161615] rounded-lg shadow-sm p-6 border border-[#e3e3e0] dark:border-[#3E3E3A]">

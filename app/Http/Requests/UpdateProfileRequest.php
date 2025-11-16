@@ -52,6 +52,15 @@ class UpdateProfileRequest extends FormRequest
                 'string',
                 'max:500',
             ],
+            'profile_image' => [
+                'nullable',
+                'file',
+                'max:2048', // 2MB max
+            ],
+            'remove_profile_image' => [
+                'nullable',
+                'boolean',
+            ],
             'password' => [
                 'nullable',
                 'confirmed',
@@ -83,6 +92,9 @@ class UpdateProfileRequest extends FormRequest
             'email.email' => 'Please enter a valid email address.',
             'email.unique' => 'This email address is already in use.',
             'timezone.required' => 'Please select your timezone.',
+            'profile_image.image' => 'The file must be an image.',
+            'profile_image.mimes' => 'The image must be a file of type: jpeg, jpg, png, gif.',
+            'profile_image.max' => 'The image size must not exceed 2MB.',
             'password.confirmed' => 'The password confirmation does not match.',
             'current_password.required_with' => 'Please enter your current password to change it.',
             'current_password.current_password' => 'The current password is incorrect.',

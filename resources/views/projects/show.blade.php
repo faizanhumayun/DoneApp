@@ -172,9 +172,11 @@
                             @foreach ($project->users as $user)
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium">
-                                            {{ strtoupper(substr($user->first_name, 0, 1)) }}{{ strtoupper(substr($user->last_name, 0, 1)) }}
-                                        </div>
+                                        <img
+                                            src="{{ $user->avatar_url }}"
+                                            alt="{{ $user->full_name }}"
+                                            class="w-8 h-8 rounded-full object-cover border-2 border-[#e3e3e0] dark:border-[#3E3E3A]"
+                                        >
                                         <div>
                                             <p class="text-sm font-medium text-[#1b1b18] dark:text-[#EDEDEC]">
                                                 {{ $user->first_name }} {{ $user->last_name }}
