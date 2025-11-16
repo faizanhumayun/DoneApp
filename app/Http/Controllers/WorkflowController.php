@@ -25,7 +25,6 @@ class WorkflowController extends Controller
         }
 
         $workflows = $company->workflows()->with(['statuses', 'creator'])->get();
-
         return view('workflows.index', compact('workflows', 'company'));
     }
 

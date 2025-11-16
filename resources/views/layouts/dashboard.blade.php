@@ -16,35 +16,43 @@
         [x-cloak] { display: none !important; }
     </style>
 
+    <!-- Theme Script - Must run BEFORE anything else -->
+    <script>
+        // Initialize theme before page renders to prevent flash
+        // Default to dark theme
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            // Save default if not set
+            if (!localStorage.getItem('theme')) {
+                localStorage.setItem('theme', 'dark');
+            }
+        })();
+    </script>
+
     <!-- Styles / Scripts -->
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @else
-        <!-- Tailwind Configuration -->
+        <!-- Tailwind Configuration - MUST be before Tailwind loads -->
         <script>
-            window.tailwindConfig = {
-                darkMode: 'class'
-            }
+            tailwind = { config: { darkMode: 'class' } };
         </script>
         <!-- Tailwind CSS CDN -->
         <script src="https://cdn.tailwindcss.com"></script>
     @endif
 
-    <!-- Theme Script -->
-    <script>
-        // Initialize theme before page renders to prevent flash
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        if (savedTheme === 'dark') {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-    </script>
+    @stack('styles')
 </head>
 <body class="bg-[#FDFDFC] dark:bg-[#0a0a0a] text-[#1b1b18] dark:text-[#EDEDEC]"
       x-data="{
-          theme: localStorage.getItem('theme') || 'light',
+          theme: localStorage.getItem('theme') || 'dark',
           setTheme(newTheme) {
+              console.log('Setting theme to:', newTheme);
               this.theme = newTheme;
               localStorage.setItem('theme', newTheme);
               if (newTheme === 'dark') {
@@ -52,6 +60,7 @@
               } else {
                   document.documentElement.classList.remove('dark');
               }
+              console.log('Theme set. HTML classes:', document.documentElement.className);
           }
       }">
     <!-- Top Navigation Bar -->
@@ -69,6 +78,10 @@
                     <a href="{{ route('dashboard') }}"
                        class="px-3 py-2 text-sm font-medium rounded-sm {{ request()->routeIs('dashboard') ? 'bg-[#f5f5f5] dark:bg-[#0a0a0a] text-[#1b1b18] dark:text-[#EDEDEC]' : 'text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]' }} transition-all">
                         Home
+                    </a>
+                    <a href="{{ route('workspace') }}"
+                       class="px-3 py-2 text-sm font-medium rounded-sm {{ request()->routeIs('workspace') ? 'bg-[#f5f5f5] dark:bg-[#0a0a0a] text-[#1b1b18] dark:text-[#EDEDEC]' : 'text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]' }} transition-all">
+                        Workspace
                     </a>
                     <a href="#"
                        class="px-3 py-2 text-sm font-medium rounded-sm text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a] transition-all">
@@ -236,5 +249,27 @@
 
     <!-- Alpine.js - Load at end of body -->
     <script src="//unpkg.com/alpinejs" defer></script>
+
+    <!-- Theme Toggle Helper - Runs after Alpine loads -->
+    <script>
+        document.addEventListener('alpine:init', () => {
+            console.log('Alpine initialized');
+            // Ensure theme is applied on page load
+            const currentTheme = localStorage.getItem('theme') || 'dark';
+            console.log('Current theme on load:', currentTheme);
+            if (currentTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Fallback: Also run when DOM is fully loaded
+        window.addEventListener('DOMContentLoaded', () => {
+            const currentTheme = localStorage.getItem('theme') || 'dark';
+            console.log('DOMContentLoaded - Current theme:', currentTheme);
+            console.log('HTML element classes:', document.documentElement.className);
+        });
+    </script>
 </body>
 </html>

@@ -167,7 +167,8 @@
                                     <div>
                                         <h3 class="text-sm font-medium text-[#706f6c] dark:text-[#A1A09A] mb-3">Statuses</h3>
                                         <div class="space-y-3">
-                                            <template x-if="selectedWorkflow?.statuses" x-for="(status, index) in selectedWorkflow.statuses" :key="status.id">
+                                            <template x-if="selectedWorkflow?.statuses">
+                                                <template x-for="(status, index) in selectedWorkflow.statuses" :key="status.id">
                                                 <div class="flex items-center gap-3 p-3 bg-[#f5f5f5] dark:bg-[#0a0a0a] rounded-sm border border-[#e3e3e0] dark:border-[#3E3E3A]">
                                                     <!-- Position -->
                                                     <div class="flex items-center justify-center w-8 h-8 rounded-sm bg-white dark:bg-[#161615] border border-[#e3e3e0] dark:border-[#3E3E3A] text-sm font-medium text-[#706f6c] dark:text-[#A1A09A]">
@@ -178,7 +179,6 @@
                                                     <div class="flex-1">
                                                         <p class="font-medium text-[#1b1b18] dark:text-[#EDEDEC]" x-text="status.name"></p>
                                                     </div>
-
                                                     <!-- Color Badge -->
                                                     <div class="flex items-center gap-2">
                                                         <div class="w-8 h-8 rounded-sm border-2 border-white dark:border-[#3E3E3A] shadow-sm"
@@ -193,6 +193,7 @@
                                                     </div>
                                                 </div>
                                             </template>
+                                            </template>
                                         </div>
                                     </div>
 
@@ -201,7 +202,9 @@
                                         <div class="grid grid-cols-3 gap-4 text-xs">
                                             <div>
                                                 <p class="text-[#706f6c] dark:text-[#A1A09A]">Created By</p>
-                                                <p class="text-[#1b1b18] dark:text-[#EDEDEC] mt-1" x-text="selectedWorkflow?.creator?.name || 'Unknown'"></p>
+                                                <p class="text-[#1b1b18] dark:text-[#EDEDEC] mt-1">
+                                                    {{$workflow->creator->first_name . ' ' . $workflow->creator->last_name}}
+                                                </p>
                                             </div>
                                             <div>
                                                 <p class="text-[#706f6c] dark:text-[#A1A09A]">Created</p>

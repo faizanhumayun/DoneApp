@@ -42,6 +42,9 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware('auth')->name('dashboard');
 
+// Workspace
+Route::get('/workspace', [App\Http\Controllers\WorkspaceController::class, 'index'])->middleware('auth')->name('workspace');
+
 // Workflows
 Route::middleware('auth')->group(function () {
     Route::get('/workflows', [App\Http\Controllers\WorkflowController::class, 'index'])->name('workflows.index');
@@ -51,6 +54,18 @@ Route::middleware('auth')->group(function () {
     Route::put('/workflows/{workflow}', [App\Http\Controllers\WorkflowController::class, 'update'])->name('workflows.update');
     Route::delete('/workflows/{workflow}', [App\Http\Controllers\WorkflowController::class, 'destroy'])->name('workflows.destroy');
     Route::post('/workflows/{workflow}/duplicate', [App\Http\Controllers\WorkflowController::class, 'duplicate'])->name('workflows.duplicate');
+});
+
+// Projects
+Route::middleware('auth')->group(function () {
+    Route::get('/projects', [App\Http\Controllers\ProjectController::class, 'index'])->name('projects.index');
+    Route::get('/projects/create', [App\Http\Controllers\ProjectController::class, 'create'])->name('projects.create');
+    Route::post('/projects', [App\Http\Controllers\ProjectController::class, 'store'])->name('projects.store');
+    Route::get('/projects/{project}', [App\Http\Controllers\ProjectController::class, 'show'])->name('projects.show');
+    Route::get('/projects/{project}/edit', [App\Http\Controllers\ProjectController::class, 'edit'])->name('projects.edit');
+    Route::put('/projects/{project}', [App\Http\Controllers\ProjectController::class, 'update'])->name('projects.update');
+    Route::delete('/projects/{project}', [App\Http\Controllers\ProjectController::class, 'destroy'])->name('projects.destroy');
+    Route::post('/projects/{project}/archive', [App\Http\Controllers\ProjectController::class, 'archive'])->name('projects.archive');
 });
 
 // Profile

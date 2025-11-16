@@ -50,6 +50,14 @@ class Company extends Model
     }
 
     /**
+     * Get the projects for the company.
+     */
+    public function projects(): HasMany
+    {
+        return $this->hasMany(Project::class);
+    }
+
+    /**
      * Get the owner of the company.
      */
     public function owner(): ?User
