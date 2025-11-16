@@ -103,6 +103,16 @@ class GuestInviteController extends Controller
         // Send email notification
         \Mail::to($invite->email)->send(new \App\Mail\GuestInvitationMail($invite));
 
+        // Log email
+        \App\Models\EmailLog::create([
+            'company_id' => $company->id,
+            'recipient' => $invite->email,
+            'subject' => 'Guest Invitation',
+            'type' => 'guest-invite',
+            'status' => 'sent',
+            'sent_at' => now(),
+        ]);
+
         $message = "Guest invitation sent to {$validated['email']}.";
 
         // Redirect based on context
@@ -293,6 +303,16 @@ class GuestInviteController extends Controller
 
         // Resend email
         \Mail::to($invite->email)->send(new \App\Mail\GuestInvitationMail($invite));
+
+        // Log email
+        \App\Models\EmailLog::create([
+            'company_id' => $invite->company_id,
+            'recipient' => $invite->email,
+            'subject' => 'Guest Invitation (Resent)',
+            'type' => 'guest-invite-resend',
+            'status' => 'sent',
+            'sent_at' => now(),
+        ]);
 
         return redirect()->route('guests.index')
             ->with('success', "Invitation resent to {$invite->email}.");

@@ -100,6 +100,15 @@ class Task extends Model
     }
 
     /**
+     * Get the discussions linked to this task.
+     */
+    public function discussions(): BelongsToMany
+    {
+        return $this->belongsToMany(Discussion::class, 'discussion_task_links')
+            ->withTimestamps();
+    }
+
+    /**
      * Get the activity logs for the task.
      */
     public function activityLogs(): HasMany

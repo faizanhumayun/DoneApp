@@ -101,6 +101,29 @@ Route::middleware('auth')->group(function () {
     Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
 });
 
+// Users Management (Owner and Admin only)
+Route::middleware(['auth', 'ensure.not.guest'])->prefix('users')->name('users.')->group(function () {
+    Route::get('/', [App\Http\Controllers\UserController::class, 'index'])->name('index');
+    Route::put('/{user}', [App\Http\Controllers\UserController::class, 'update'])->name('update');
+    Route::post('/{user}/archive', [App\Http\Controllers\UserController::class, 'archive'])->name('archive');
+    Route::post('/{user}/restore', [App\Http\Controllers\UserController::class, 'restore'])->name('restore');
+});
+
+// Discussions
+Route::middleware('auth')->prefix('discussions')->name('discussions.')->group(function () {
+    Route::get('/', [App\Http\Controllers\DiscussionController::class, 'index'])->name('index');
+    Route::get('/create', [App\Http\Controllers\DiscussionController::class, 'create'])->name('create');
+    Route::post('/', [App\Http\Controllers\DiscussionController::class, 'store'])->name('store');
+    Route::get('/{discussion}', [App\Http\Controllers\DiscussionController::class, 'show'])->name('show');
+    Route::get('/{discussion}/edit', [App\Http\Controllers\DiscussionController::class, 'edit'])->name('edit');
+    Route::put('/{discussion}', [App\Http\Controllers\DiscussionController::class, 'update'])->name('update');
+    Route::delete('/{discussion}', [App\Http\Controllers\DiscussionController::class, 'destroy'])->name('destroy');
+
+    // Comments
+    Route::post('/{discussion}/comments', [App\Http\Controllers\DiscussionController::class, 'storeComment'])->name('comments.store');
+    Route::delete('/{discussion}/comments/{comment}', [App\Http\Controllers\DiscussionController::class, 'destroyComment'])->name('comments.destroy');
+});
+
 // Login
 Route::get('/login', [App\Http\Controllers\LoginController::class, 'show'])->name('login');
 Route::post('/login', [App\Http\Controllers\LoginController::class, 'login'])->name('login.submit');
@@ -132,3 +155,37 @@ Route::prefix('guests')->name('guests.')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/guests/dashboard', [App\Http\Controllers\GuestInviteController::class, 'dashboard'])->name('guests.dashboard');
 });
+
+// Settings (Owner only)
+Route::middleware(['auth', 'ensure.not.guest'])->prefix('settings')->name('settings.')->group(function () {
+    Route::get('/', [App\Http\Controllers\SettingsController::class, 'index'])->name('index');
+    Route::get('/account', [App\Http\Controllers\SettingsController::class, 'account'])->name('account');
+    Route::put('/account', [App\Http\Controllers\SettingsController::class, 'updateAccount'])->name('account.update');
+    Route::get('/billing', [App\Http\Controllers\SettingsController::class, 'billing'])->name('billing');
+    Route::get('/logs', [App\Http\Controllers\SettingsController::class, 'logs'])->name('logs');
+    Route::get('/export-data', [App\Http\Controllers\SettingsController::class, 'exportData'])->name('export');
+    Route::post('/export-data/download', [App\Http\Controllers\SettingsController::class, 'downloadExport'])->name('export.download');
+    Route::get('/calendar-sync', [App\Http\Controllers\SettingsController::class, 'calendarSync'])->name('calendar-sync');
+
+    // Two-Factor Authentication
+    Route::prefix('two-factor')->name('two-factor.')->group(function () {
+        Route::get('/', [App\Http\Controllers\TwoFactorAuthController::class, 'index'])->name('index');
+        Route::post('/enable', [App\Http\Controllers\TwoFactorAuthController::class, 'enable'])->name('enable');
+        Route::get('/confirm', [App\Http\Controllers\TwoFactorAuthController::class, 'showConfirm'])->name('confirm');
+        Route::post('/confirm', [App\Http\Controllers\TwoFactorAuthController::class, 'confirm'])->name('confirm');
+        Route::get('/recovery-codes', [App\Http\Controllers\TwoFactorAuthController::class, 'showRecoveryCodes'])->name('recovery-codes');
+        Route::post('/regenerate-codes', [App\Http\Controllers\TwoFactorAuthController::class, 'regenerateRecoveryCodes'])->name('regenerate-codes');
+        Route::delete('/disable', [App\Http\Controllers\TwoFactorAuthController::class, 'disable'])->name('disable');
+    });
+
+    // Access Requests
+    Route::prefix('access-requests')->name('access-requests.')->group(function () {
+        Route::get('/', [App\Http\Controllers\AccessRequestController::class, 'index'])->name('index');
+        Route::post('/{accessRequest}/approve', [App\Http\Controllers\AccessRequestController::class, 'approve'])->name('approve');
+        Route::post('/{accessRequest}/deny', [App\Http\Controllers\AccessRequestController::class, 'deny'])->name('deny');
+    });
+});
+
+// Public Access Request Form
+Route::get('/request-access/{companyId}', [App\Http\Controllers\AccessRequestController::class, 'create'])->name('access-requests.create');
+Route::post('/request-access/{companyId}', [App\Http\Controllers\AccessRequestController::class, 'store'])->name('access-requests.store');

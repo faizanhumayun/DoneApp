@@ -85,9 +85,9 @@
                            class="px-3 py-2 text-sm font-medium rounded-sm {{ request()->routeIs('tasks.*') ? 'bg-[#f5f5f5] dark:bg-[#0a0a0a] text-[#1b1b18] dark:text-[#EDEDEC]' : 'text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]' }} transition-all">
                             My Tasks
                         </a>
-                        <a href="#"
-                           class="px-3 py-2 text-sm font-medium rounded-sm text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a] transition-all">
-                            Conversations
+                        <a href="{{ route('discussions.index') }}"
+                           class="px-3 py-2 text-sm font-medium rounded-sm {{ request()->routeIs('discussions.*') ? 'bg-[#f5f5f5] dark:bg-[#0a0a0a] text-[#1b1b18] dark:text-[#EDEDEC]' : 'text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]' }} transition-all">
+                            Discussions
                         </a>
                     @else
                         <!-- Member/Admin Navigation -->
@@ -103,9 +103,9 @@
                            class="px-3 py-2 text-sm font-medium rounded-sm {{ request()->routeIs('tasks.*') ? 'bg-[#f5f5f5] dark:bg-[#0a0a0a] text-[#1b1b18] dark:text-[#EDEDEC]' : 'text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]' }} transition-all">
                             Tasks
                         </a>
-                        <a href="#"
-                           class="px-3 py-2 text-sm font-medium rounded-sm text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a] transition-all">
-                            Conversations
+                        <a href="{{ route('discussions.index') }}"
+                           class="px-3 py-2 text-sm font-medium rounded-sm {{ request()->routeIs('discussions.*') ? 'bg-[#f5f5f5] dark:bg-[#0a0a0a] text-[#1b1b18] dark:text-[#EDEDEC]' : 'text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]' }} transition-all">
+                            Discussions
                         </a>
                     @endif
 
@@ -132,18 +132,30 @@
                                  x-transition:leave-end="transform opacity-0 scale-95"
                                  class="absolute left-0 mt-2 w-48 bg-white dark:bg-[#161615] rounded-sm shadow-lg border border-[#e3e3e0] dark:border-[#3E3E3A] py-1"
                                  x-cloak>
-                                @if (auth()->user()->getCompanyRole() === 'owner')
+                                @php
+                                    $userRole = auth()->user()->getCompanyRole();
+                                    $isOwner = $userRole === 'owner';
+                                    $isOwnerOrAdmin = in_array($userRole, ['owner', 'admin']);
+                                @endphp
+
+                                @if ($isOwner)
                                     <a href="{{ route('workflows.index') }}" class="block px-4 py-2 text-sm text-[#1b1b18] dark:text-[#EDEDEC] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]">
                                         Workflows
                                     </a>
-                                    <a href="#" class="block px-4 py-2 text-sm text-[#1b1b18] dark:text-[#EDEDEC] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]">
+                                @endif
+
+                                @if ($isOwnerOrAdmin)
+                                    <a href="{{ route('users.index') }}" class="block px-4 py-2 text-sm text-[#1b1b18] dark:text-[#EDEDEC] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]">
                                         Users
                                     </a>
+                                @endif
+
+                                @if ($isOwner)
                                     <a href="{{ route('guests.index') }}" class="block px-4 py-2 text-sm text-[#1b1b18] dark:text-[#EDEDEC] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]">
                                         Guests
                                     </a>
                                     <div class="border-t border-[#e3e3e0] dark:border-[#3E3E3A] my-1"></div>
-                                    <a href="#" class="block px-4 py-2 text-sm text-[#1b1b18] dark:text-[#EDEDEC] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]">
+                                    <a href="{{ route('settings.index') }}" class="block px-4 py-2 text-sm text-[#1b1b18] dark:text-[#EDEDEC] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]">
                                         Settings
                                     </a>
                                 @endif
@@ -294,5 +306,7 @@
             console.log('HTML element classes:', document.documentElement.className);
         });
     </script>
+
+    @stack('scripts')
 </body>
 </html>
