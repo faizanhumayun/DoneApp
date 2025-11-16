@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Project extends Model
 {
@@ -80,13 +81,20 @@ class Project extends Model
     }
 
     /**
+     * Get the tasks for the project.
+     */
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
+    }
+
+    /**
      * Check if the project can be deleted.
      */
     public function canBeDeleted(): bool
     {
-        // Add logic to check if project has tasks
-        // For now, allow deletion for all projects
-        return true;
+        // Prevent deletion if project has tasks
+        return $this->tasks()->count() === 0;
     }
 
     /**

@@ -75,68 +75,87 @@
                     </a>
 
                     <!-- Navigation Tabs -->
-                    <a href="{{ route('dashboard') }}"
-                       class="px-3 py-2 text-sm font-medium rounded-sm {{ request()->routeIs('dashboard') ? 'bg-[#f5f5f5] dark:bg-[#0a0a0a] text-[#1b1b18] dark:text-[#EDEDEC]' : 'text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]' }} transition-all">
-                        Home
-                    </a>
-                    <a href="{{ route('workspace') }}"
-                       class="px-3 py-2 text-sm font-medium rounded-sm {{ request()->routeIs('workspace') ? 'bg-[#f5f5f5] dark:bg-[#0a0a0a] text-[#1b1b18] dark:text-[#EDEDEC]' : 'text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]' }} transition-all">
-                        Workspace
-                    </a>
-                    <a href="#"
-                       class="px-3 py-2 text-sm font-medium rounded-sm text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a] transition-all">
-                        Tasks
-                    </a>
-                    <a href="#"
-                       class="px-3 py-2 text-sm font-medium rounded-sm text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a] transition-all">
-                        Conversations
-                    </a>
-                    <a href="{{ route('workflows.index') }}"
-                       class="px-3 py-2 text-sm font-medium rounded-sm {{ request()->routeIs('workflows.*') ? 'bg-[#f5f5f5] dark:bg-[#0a0a0a] text-[#1b1b18] dark:text-[#EDEDEC]' : 'text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]' }} transition-all">
-                        Workflows
-                    </a>
-                    <a href="#"
-                       class="px-3 py-2 text-sm font-medium rounded-sm text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a] transition-all">
-                        Users
-                    </a>
-                    <a href="#"
-                       class="px-3 py-2 text-sm font-medium rounded-sm text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a] transition-all">
-                        Guests
-                    </a>
+                    @if (auth()->user()->isGuest())
+                        <!-- Guest Navigation -->
+                        <a href="{{ route('guests.dashboard') }}"
+                           class="px-3 py-2 text-sm font-medium rounded-sm {{ request()->routeIs('guests.dashboard') ? 'bg-[#f5f5f5] dark:bg-[#0a0a0a] text-[#1b1b18] dark:text-[#EDEDEC]' : 'text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]' }} transition-all">
+                            Home
+                        </a>
+                        <a href="{{ route('tasks.index') }}"
+                           class="px-3 py-2 text-sm font-medium rounded-sm {{ request()->routeIs('tasks.*') ? 'bg-[#f5f5f5] dark:bg-[#0a0a0a] text-[#1b1b18] dark:text-[#EDEDEC]' : 'text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]' }} transition-all">
+                            My Tasks
+                        </a>
+                        <a href="#"
+                           class="px-3 py-2 text-sm font-medium rounded-sm text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a] transition-all">
+                            Conversations
+                        </a>
+                    @else
+                        <!-- Member/Admin Navigation -->
+                        <a href="{{ route('dashboard') }}"
+                           class="px-3 py-2 text-sm font-medium rounded-sm {{ request()->routeIs('dashboard') ? 'bg-[#f5f5f5] dark:bg-[#0a0a0a] text-[#1b1b18] dark:text-[#EDEDEC]' : 'text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]' }} transition-all">
+                            Home
+                        </a>
+                        <a href="{{ route('workspace') }}"
+                           class="px-3 py-2 text-sm font-medium rounded-sm {{ request()->routeIs('workspace') ? 'bg-[#f5f5f5] dark:bg-[#0a0a0a] text-[#1b1b18] dark:text-[#EDEDEC]' : 'text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]' }} transition-all">
+                            Workspace
+                        </a>
+                        <a href="{{ route('tasks.index') }}"
+                           class="px-3 py-2 text-sm font-medium rounded-sm {{ request()->routeIs('tasks.*') ? 'bg-[#f5f5f5] dark:bg-[#0a0a0a] text-[#1b1b18] dark:text-[#EDEDEC]' : 'text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]' }} transition-all">
+                            Tasks
+                        </a>
+                        <a href="#"
+                           class="px-3 py-2 text-sm font-medium rounded-sm text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a] transition-all">
+                            Conversations
+                        </a>
+                    @endif
 
-                    <!-- More Dropdown -->
-                    <div x-data="{ open: false }" class="relative">
-                        <button
-                            @click="open = !open"
-                            class="px-3 py-2 text-sm font-medium rounded-sm text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a] transition-all flex items-center gap-1">
-                            More
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </button>
+                    <!-- More Dropdown (Not visible to guests) -->
+                    @if (!auth()->user()->isGuest())
+                        <div x-data="{ open: false }" class="relative">
+                            <button
+                                @click="open = !open"
+                                class="px-3 py-2 text-sm font-medium rounded-sm text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a] transition-all flex items-center gap-1">
+                                More
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
 
-                        <!-- Dropdown Menu -->
-                        <div x-show="open"
-                             @click.away="open = false"
-                             x-transition:enter="transition ease-out duration-100"
-                             x-transition:enter-start="transform opacity-0 scale-95"
-                             x-transition:enter-end="transform opacity-100 scale-100"
-                             x-transition:leave="transition ease-in duration-75"
-                             x-transition:leave-start="transform opacity-100 scale-100"
-                             x-transition:leave-end="transform opacity-0 scale-95"
-                             class="absolute left-0 mt-2 w-48 bg-white dark:bg-[#161615] rounded-sm shadow-lg border border-[#e3e3e0] dark:border-[#3E3E3A] py-1"
-                             x-cloak>
-                            <a href="#" class="block px-4 py-2 text-sm text-[#1b1b18] dark:text-[#EDEDEC] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]">
-                                Settings
-                            </a>
-                            <a href="#" class="block px-4 py-2 text-sm text-[#1b1b18] dark:text-[#EDEDEC] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]">
-                                Reports
-                            </a>
-                            <a href="#" class="block px-4 py-2 text-sm text-[#1b1b18] dark:text-[#EDEDEC] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]">
-                                Analytics
-                            </a>
+                            <!-- Dropdown Menu -->
+                            <div x-show="open"
+                                 @click.away="open = false"
+                                 x-transition:enter="transition ease-out duration-100"
+                                 x-transition:enter-start="transform opacity-0 scale-95"
+                                 x-transition:enter-end="transform opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-75"
+                                 x-transition:leave-start="transform opacity-100 scale-100"
+                                 x-transition:leave-end="transform opacity-0 scale-95"
+                                 class="absolute left-0 mt-2 w-48 bg-white dark:bg-[#161615] rounded-sm shadow-lg border border-[#e3e3e0] dark:border-[#3E3E3A] py-1"
+                                 x-cloak>
+                                @if (auth()->user()->getCompanyRole() === 'owner')
+                                    <a href="{{ route('workflows.index') }}" class="block px-4 py-2 text-sm text-[#1b1b18] dark:text-[#EDEDEC] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]">
+                                        Workflows
+                                    </a>
+                                    <a href="#" class="block px-4 py-2 text-sm text-[#1b1b18] dark:text-[#EDEDEC] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]">
+                                        Users
+                                    </a>
+                                    <a href="{{ route('guests.index') }}" class="block px-4 py-2 text-sm text-[#1b1b18] dark:text-[#EDEDEC] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]">
+                                        Guests
+                                    </a>
+                                    <div class="border-t border-[#e3e3e0] dark:border-[#3E3E3A] my-1"></div>
+                                    <a href="#" class="block px-4 py-2 text-sm text-[#1b1b18] dark:text-[#EDEDEC] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]">
+                                        Settings
+                                    </a>
+                                @endif
+                                <a href="#" class="block px-4 py-2 text-sm text-[#1b1b18] dark:text-[#EDEDEC] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]">
+                                    Reports
+                                </a>
+                                <a href="#" class="block px-4 py-2 text-sm text-[#1b1b18] dark:text-[#EDEDEC] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a]">
+                                    Analytics
+                                </a>
+                            </div>
                         </div>
-                    </div>
+                    @endif
                 </div>
 
                 <!-- Right Group: Global Actions -->
@@ -157,13 +176,15 @@
                         <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                     </button>
 
-                    <!-- Add New Button -->
-                    <button class="flex items-center gap-2 px-3 py-1.5 bg-[#1b1b18] dark:bg-[#eeeeec] text-white dark:text-[#1C1C1A] hover:bg-black dark:hover:bg-white rounded-sm transition-all">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <span class="text-sm font-medium">Add New</span>
-                    </button>
+                    <!-- Add New Button (Not visible to guests) -->
+                    @if (!auth()->user()->isGuest())
+                        <button class="flex items-center gap-2 px-3 py-1.5 bg-[#1b1b18] dark:bg-[#eeeeec] text-white dark:text-[#1C1C1A] hover:bg-black dark:hover:bg-white rounded-sm transition-all">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span class="text-sm font-medium">Add New</span>
+                        </button>
+                    @endif
 
                     <!-- User Menu -->
                     <div x-data="{ open: false }" class="relative">

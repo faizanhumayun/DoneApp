@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -62,6 +63,31 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get the tasks assigned to the user.
+     */
+    public function assignedTasks(): HasMany
+    {
+        return $this->hasMany(Task::class, 'assignee_id');
+    }
+
+    /**
+     * Get the tasks created by the user.
+     */
+    public function createdTasks(): HasMany
+    {
+        return $this->hasMany(Task::class, 'created_by');
+    }
+
+    /**
+     * Get the tasks the user is watching.
+     */
+    public function watchingTasks(): BelongsToMany
+    {
+        return $this->belongsToMany(Task::class, 'task_watchers')
+            ->withTimestamps();
+    }
+
+    /**
      * Get the user's full name.
      */
     public function getFullNameAttribute(): string
@@ -92,5 +118,32 @@ class User extends Authenticatable implements MustVerifyEmail
         $firstInitial = strtoupper(substr($this->first_name, 0, 1));
         $lastInitial = strtoupper(substr($this->last_name, 0, 1));
         return $firstInitial . $lastInitial;
+    }
+
+    /**
+     * Check if user is a guest in their current company.
+     */
+    public function isGuest(): bool
+    {
+        $company = $this->companies->first();
+        if (!$company) {
+            return false;
+        }
+
+        $role = $company->pivot->role ?? null;
+        return $role === 'guest';
+    }
+
+    /**
+     * Get the user's role in their current company.
+     */
+    public function getCompanyRole(): ?string
+    {
+        $company = $this->companies->first();
+        if (!$company) {
+            return null;
+        }
+
+        return $company->pivot->role ?? null;
     }
 }

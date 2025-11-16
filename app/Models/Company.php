@@ -58,6 +58,14 @@ class Company extends Model
     }
 
     /**
+     * Get the tags for the company.
+     */
+    public function tags(): HasMany
+    {
+        return $this->hasMany(Tag::class);
+    }
+
+    /**
      * Get the owner of the company.
      */
     public function owner(): ?User

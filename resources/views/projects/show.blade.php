@@ -21,15 +21,25 @@
                         @endif
                     </div>
 
-                    @if (in_array($userRole, ['owner', 'admin']))
-                        <a href="{{ route('projects.edit', $project) }}"
-                           class="flex items-center gap-2 px-5 py-2 bg-[#1b1b18] dark:bg-[#eeeeec] text-white dark:text-[#1C1C1A] hover:bg-black dark:hover:bg-white font-medium rounded-sm transition-all">
+                    <div class="flex items-center gap-3">
+                        <a href="{{ route('projects.index') }}"
+                           class="flex items-center gap-2 px-5 py-2 bg-[#f5f5f5] dark:bg-[#0a0a0a] text-[#1b1b18] dark:text-[#EDEDEC] hover:bg-[#e3e3e0] dark:hover:bg-[#1C1C1A] font-medium rounded-sm transition-all">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                             </svg>
-                            Edit Project
+                            Back to Workspace
                         </a>
-                    @endif
+
+                        @if (in_array($userRole, ['owner', 'admin']))
+                            <a href="{{ route('projects.edit', $project) }}"
+                               class="flex items-center gap-2 px-5 py-2 bg-[#1b1b18] dark:bg-[#eeeeec] text-white dark:text-[#1C1C1A] hover:bg-black dark:hover:bg-white font-medium rounded-sm transition-all">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                Edit Project
+                            </a>
+                        @endif
+                    </div>
                 </div>
             </div>
 
@@ -63,36 +73,81 @@
                         </div>
                     </div>
 
-                    <!-- Tasks Section - Empty State -->
+                    <!-- Tasks Section -->
                     <div class="bg-white dark:bg-[#161615] rounded-lg shadow-sm border border-[#e3e3e0] dark:border-[#3E3E3A] p-6">
                         <div class="flex items-center justify-between mb-6">
-                            <h2 class="text-xl font-semibold text-[#1b1b18] dark:text-[#EDEDEC]">Tasks</h2>
-                            <button
+                            <h2 class="text-xl font-semibold text-[#1b1b18] dark:text-[#EDEDEC]">Tasks ({{ $project->tasks->count() }})</h2>
+                            <a
+                                href="{{ route('tasks.create', $project) }}"
                                 class="flex items-center gap-2 px-4 py-2 bg-[#f5f5f5] dark:bg-[#0a0a0a] text-[#1b1b18] dark:text-[#EDEDEC] hover:bg-[#e3e3e0] dark:hover:bg-[#1C1C1A] rounded-sm transition-all"
                             >
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                                 </svg>
                                 Add Task
-                            </button>
+                            </a>
                         </div>
 
-                        <!-- Empty State -->
-                        <div class="text-center py-12">
-                            <svg class="mx-auto w-16 h-16 text-[#706f6c] dark:text-[#A1A09A] mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-                            </svg>
-                            <h3 class="text-lg font-medium text-[#1b1b18] dark:text-[#EDEDEC] mb-2">No tasks yet</h3>
-                            <p class="text-[#706f6c] dark:text-[#A1A09A] mb-6">Get started by creating your first task for this project.</p>
-                            <button
-                                class="inline-flex items-center gap-2 px-5 py-2 bg-[#1b1b18] dark:bg-[#eeeeec] text-white dark:text-[#1C1C1A] hover:bg-black dark:hover:bg-white font-medium rounded-sm transition-all"
-                            >
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        @if ($project->tasks->count() > 0)
+                            <!-- Tasks List -->
+                            <div class="space-y-3">
+                                @foreach ($project->tasks as $task)
+                                    <a href="{{ route('tasks.show', [$project, $task]) }}"
+                                       class="block p-4 border border-[#e3e3e0] dark:border-[#3E3E3A] rounded-sm hover:border-[#1b1b18] dark:hover:border-[#EDEDEC] transition-all">
+                                        <div class="flex items-start justify-between gap-4">
+                                            <div class="flex-1">
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <span class="text-xs text-[#706f6c] dark:text-[#A1A09A]">{{ $task->task_number }}</span>
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                                                          style="background-color: {{ $task->workflowStatus->color }}; color: {{ $task->workflowStatus->text_color }}">
+                                                        {{ $task->workflowStatus->name }}
+                                                    </span>
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                                                          style="background-color: {{ $task->priority_color }}; color: {{ $task->priority_text_color }}">
+                                                        {{ ucfirst($task->priority) }}
+                                                    </span>
+                                                </div>
+                                                <h3 class="text-sm font-medium text-[#1b1b18] dark:text-[#EDEDEC] mb-1">{{ $task->title }}</h3>
+                                                <div class="flex items-center gap-3 text-xs text-[#706f6c] dark:text-[#A1A09A]">
+                                                    @if ($task->assignee)
+                                                        <div class="flex items-center gap-1">
+                                                            <img src="{{ $task->assignee->avatar_url }}" alt="{{ $task->assignee->full_name }}" class="w-4 h-4 rounded-full">
+                                                            <span>{{ $task->assignee->full_name }}</span>
+                                                        </div>
+                                                    @else
+                                                        <span>Unassigned</span>
+                                                    @endif
+                                                    @if ($task->due_date)
+                                                        <span>• Due {{ $task->due_date->format('M d, Y') }}</span>
+                                                    @endif
+                                                    @if ($task->comments->count() > 0)
+                                                        <span>• {{ $task->comments->count() }} {{ Str::plural('comment', $task->comments->count()) }}</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                @endforeach
+                            </div>
+                        @else
+                            <!-- Empty State -->
+                            <div class="text-center py-12">
+                                <svg class="mx-auto w-16 h-16 text-[#706f6c] dark:text-[#A1A09A] mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                                 </svg>
-                                Create First Task
-                            </button>
-                        </div>
+                                <h3 class="text-lg font-medium text-[#1b1b18] dark:text-[#EDEDEC] mb-2">No tasks yet</h3>
+                                <p class="text-[#706f6c] dark:text-[#A1A09A] mb-6">Get started by creating your first task for this project.</p>
+                                <a
+                                    href="{{ route('tasks.create', $project) }}"
+                                    class="inline-flex items-center gap-2 px-5 py-2 bg-[#1b1b18] dark:bg-[#eeeeec] text-white dark:text-[#1C1C1A] hover:bg-black dark:hover:bg-white font-medium rounded-sm transition-all"
+                                >
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                    </svg>
+                                    Create First Task
+                                </a>
+                            </div>
+                        @endif
                     </div>
                 </div>
 

@@ -131,7 +131,14 @@ class ProjectController extends Controller
             abort(403, 'You do not have permission to view this project.');
         }
 
-        $project->load(['workflow.statuses', 'creator', 'users']);
+        $project->load([
+            'workflow.statuses',
+            'creator',
+            'users',
+            'tasks.workflowStatus',
+            'tasks.assignee',
+            'tasks.comments'
+        ]);
 
         // Get user's role in company for permission checks
         $userRole = $company->users()->where('user_id', Auth::id())->first()->pivot->role;
