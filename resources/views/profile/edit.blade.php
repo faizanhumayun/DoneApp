@@ -1,5 +1,9 @@
 @extends('layouts.dashboard')
 
+@push('styles')
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+@endpush
+
 @section('content')
     <div class="p-6 lg:p-8">
         <div class="max-w-4xl mx-auto">
@@ -178,15 +182,14 @@
 
                         <!-- About Yourself -->
                         <div class="md:col-span-2">
-                            <label for="about_yourself" class="block text-sm font-medium mb-2">About Yourself (Optional)</label>
-                            <textarea
-                                id="about_yourself"
-                                name="about_yourself"
-                                rows="4"
-                                maxlength="500"
-                                class="w-full px-4 py-2 border border-[#e3e3e0] dark:border-[#3E3E3A] rounded-sm bg-white dark:bg-[#161615] text-[#1b1b18] dark:text-[#EDEDEC] focus:outline-none focus:ring-2 focus:ring-blue-500 @error('about_yourself') border-red-500 @enderror"
-                                placeholder="Tell us a bit about yourself..."
-                            >{{ old('about_yourself', $user->about_yourself) }}</textarea>
+                            <label for="about_yourself_editor" class="block text-sm font-medium mb-2">About Yourself (Optional)</label>
+
+                            <!-- Quill Editor Container -->
+                            <div id="about_yourself_editor" class="bg-white dark:bg-[#161615] border border-[#e3e3e0] dark:border-[#3E3E3A] rounded-sm @error('about_yourself') border-red-500 @enderror"></div>
+
+                            <!-- Hidden input to store the content for form submission -->
+                            <input type="hidden" name="about_yourself" id="about_yourself">
+
                             <p class="text-xs text-[#706f6c] dark:text-[#A1A09A] mt-1">Maximum 500 characters</p>
                         </div>
                     </div>
@@ -300,3 +303,62 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<style>
+    /* Set minimum height for Quill editor to match 4 rows textarea */
+    #about_yourself_editor .ql-editor {
+        min-height: 96px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+</style>
+<script>
+    // Initialize Quill editor
+    var quill = new Quill('#about_yourself_editor', {
+        theme: 'snow',
+        placeholder: 'Tell us a bit about yourself...',
+        modules: {
+            toolbar: [
+                ['bold', 'italic', 'underline'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['link'],
+                ['clean']
+            ]
+        }
+    });
+
+    // Load existing content
+    var existingContent = {!! json_encode(old('about_yourself', $user->about_yourself)) !!};
+    if (existingContent) {
+        // Check if content is HTML or plain text
+        if (existingContent.indexOf('<') !== -1) {
+            quill.root.innerHTML = existingContent;
+        } else {
+            quill.setText(existingContent);
+        }
+    }
+
+    // Update hidden input on text change
+    quill.on('text-change', function() {
+        var html = quill.root.innerHTML;
+        // If editor is empty, set to null
+        if (quill.getText().trim().length === 0) {
+            document.getElementById('about_yourself').value = '';
+        } else {
+            document.getElementById('about_yourself').value = html;
+        }
+    });
+
+    // Before form submit, update hidden field
+    document.querySelector('form').addEventListener('submit', function() {
+        var html = quill.root.innerHTML;
+        if (quill.getText().trim().length === 0) {
+            document.getElementById('about_yourself').value = '';
+        } else {
+            document.getElementById('about_yourself').value = html;
+        }
+    });
+</script>
+@endpush

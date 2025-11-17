@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Invitation;
 use App\Models\User;
+use App\Notifications\TeamInvitation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
 use Illuminate\Validation\Rules\Password;
 
@@ -29,45 +33,65 @@ class UserController extends Controller
         // Get tab from request, default to 'active'
         $tab = $request->get('tab', 'active');
 
-        // Build query for users in this company
-        $query = User::whereHas('companies', function ($q) use ($company) {
-            $q->where('companies.id', $company->id);
-        })->with(['companies' => function ($q) use ($company) {
-            $q->where('companies.id', $company->id);
-        }]);
+        // Handle invitations tab separately
+        if ($tab === 'invitations') {
+            $invitations = Invitation::where('company_id', $company->id)
+                ->where('status', 'pending')
+                ->with('invitedBy')
+                ->orderBy('created_at', 'desc')
+                ->get();
 
-        // Filter by status based on tab
-        switch ($tab) {
-            case 'inactive':
-                $query->where('status', 'inactive');
-                break;
-            case 'archived':
-                $query->where('status', 'archived');
-                break;
-            default:
-                $query->where('status', 'active');
+            // Apply search filter to invitations
+            if ($request->filled('search')) {
+                $search = $request->get('search');
+                $invitations = $invitations->filter(function ($invitation) use ($search) {
+                    return stripos($invitation->invited_email, $search) !== false;
+                });
+            }
+
+            $users = collect(); // Empty collection for users
+        } else {
+            // Build query for users in this company
+            $query = User::whereHas('companies', function ($q) use ($company) {
+                $q->where('companies.id', $company->id);
+            })->with(['companies' => function ($q) use ($company) {
+                $q->where('companies.id', $company->id);
+            }]);
+
+            // Filter by status based on tab
+            switch ($tab) {
+                case 'inactive':
+                    $query->where('status', 'inactive');
+                    break;
+                case 'archived':
+                    $query->where('status', 'archived');
+                    break;
+                default:
+                    $query->where('status', 'active');
+            }
+
+            // Search
+            if ($request->filled('search')) {
+                $search = $request->get('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('first_name', 'like', "%{$search}%")
+                      ->orWhere('last_name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%");
+                });
+            }
+
+            // Filter by role
+            if ($request->filled('role') && $request->get('role') !== 'all') {
+                $role = $request->get('role');
+                $query->whereHas('companies', function ($q) use ($company, $role) {
+                    $q->where('companies.id', $company->id)
+                      ->where('company_user.role', $role);
+                });
+            }
+
+            $users = $query->orderBy('first_name')->get();
+            $invitations = collect(); // Empty collection for invitations
         }
-
-        // Search
-        if ($request->filled('search')) {
-            $search = $request->get('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-
-        // Filter by role
-        if ($request->filled('role') && $request->get('role') !== 'all') {
-            $role = $request->get('role');
-            $query->whereHas('companies', function ($q) use ($company, $role) {
-                $q->where('companies.id', $company->id)
-                  ->where('company_user.role', $role);
-            });
-        }
-
-        $users = $query->orderBy('first_name')->get();
 
         // Get counts for each tab
         $activeCount = User::whereHas('companies', function ($q) use ($company) {
@@ -82,12 +106,18 @@ class UserController extends Controller
             $q->where('companies.id', $company->id);
         })->where('status', 'archived')->count();
 
+        $invitationsCount = Invitation::where('company_id', $company->id)
+            ->where('status', 'pending')
+            ->count();
+
         return view('users.index', compact(
             'users',
+            'invitations',
             'tab',
             'activeCount',
             'inactiveCount',
             'archivedCount',
+            'invitationsCount',
             'userRole'
         ));
     }
@@ -199,5 +229,155 @@ class UserController extends Controller
 
         return redirect()->route('users.index', ['tab' => 'inactive'])
             ->with('success', "{$user->full_name} has been restored to inactive status.");
+    }
+
+    /**
+     * Send team member invitations.
+     */
+    public function invite(Request $request): RedirectResponse
+    {
+        $authUser = Auth::user();
+        $company = $authUser->companies->first();
+
+        // Check permissions - only owner and admin can invite
+        $authUserRole = $company->users()->where('user_id', $authUser->id)->first()->pivot->role;
+        if (!in_array($authUserRole, ['owner', 'admin'])) {
+            abort(403, 'You do not have permission to invite users.');
+        }
+
+        $validated = $request->validate([
+            'team_emails' => ['nullable', 'array'],
+            'team_emails.*' => ['nullable', 'email', 'max:255'],
+        ]);
+
+        $teamEmails = array_filter($validated['team_emails'] ?? [], fn($email) => !empty($email));
+
+        if (empty($teamEmails)) {
+            return back()->withErrors(['team_emails' => 'Please provide at least one email address.']);
+        }
+
+        $invitedCount = 0;
+        $skippedEmails = [];
+
+        DB::transaction(function () use ($teamEmails, $company, $authUser, &$invitedCount, &$skippedEmails) {
+            foreach ($teamEmails as $email) {
+                // Check if user already exists in company
+                $existingUser = User::whereHas('companies', function ($q) use ($company) {
+                    $q->where('companies.id', $company->id);
+                })->where('email', $email)->first();
+
+                if ($existingUser) {
+                    $skippedEmails[] = $email . ' (already a member)';
+                    continue;
+                }
+
+                // Check if there's already a pending invitation
+                $existingInvite = Invitation::where('company_id', $company->id)
+                    ->where('invited_email', $email)
+                    ->where('status', 'pending')
+                    ->first();
+
+                if ($existingInvite && !$existingInvite->isTokenExpired()) {
+                    $skippedEmails[] = $email . ' (already invited)';
+                    continue;
+                }
+
+                // Create invitation
+                $invitation = Invitation::create([
+                    'company_id' => $company->id,
+                    'invited_email' => $email,
+                    'invited_by_user_id' => $authUser->id,
+                    'invite_token' => Invitation::generateToken(),
+                    'invite_token_expires_at' => now()->addDays(7),
+                    'status' => 'pending',
+                ]);
+
+                // Send invitation email
+                Notification::route('mail', $email)
+                    ->notify(new TeamInvitation($invitation));
+
+                // Log email
+                \App\Models\EmailLog::create([
+                    'company_id' => $company->id,
+                    'recipient' => $email,
+                    'subject' => 'Team Invitation',
+                    'type' => 'team-invite',
+                    'status' => 'sent',
+                    'sent_at' => now(),
+                ]);
+
+                $invitedCount++;
+            }
+        });
+
+        $message = $invitedCount > 0
+            ? "Successfully sent {$invitedCount} invitation(s)."
+            : 'No invitations were sent.';
+
+        if (!empty($skippedEmails)) {
+            $message .= ' Skipped: ' . implode(', ', $skippedEmails);
+        }
+
+        return redirect()->route('users.index')
+            ->with('success', $message);
+    }
+
+    /**
+     * Resend a team invitation.
+     */
+    public function resendInvitation(Invitation $invitation): RedirectResponse
+    {
+        $authUser = Auth::user();
+        $company = $authUser->companies->first();
+
+        // Verify invitation belongs to this company
+        if ($invitation->company_id !== $company->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Check if expired - regenerate token if needed
+        if ($invitation->isTokenExpired()) {
+            $invitation->update([
+                'invite_token' => Invitation::generateToken(),
+                'invite_token_expires_at' => now()->addDays(7),
+            ]);
+        }
+
+        // Resend email
+        Notification::route('mail', $invitation->invited_email)
+            ->notify(new TeamInvitation($invitation));
+
+        // Log email
+        \App\Models\EmailLog::create([
+            'company_id' => $invitation->company_id,
+            'recipient' => $invitation->invited_email,
+            'subject' => 'Team Invitation (Resent)',
+            'type' => 'team-invite-resend',
+            'status' => 'sent',
+            'sent_at' => now(),
+        ]);
+
+        return redirect()->route('users.index', ['tab' => 'invitations'])
+            ->with('success', "Invitation resent to {$invitation->invited_email}.");
+    }
+
+    /**
+     * Cancel a pending invitation.
+     */
+    public function cancelInvitation(Invitation $invitation): RedirectResponse
+    {
+        $authUser = Auth::user();
+        $company = $authUser->companies->first();
+
+        // Verify invitation belongs to this company
+        if ($invitation->company_id !== $company->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $email = $invitation->invited_email;
+        $invitation->delete();
+
+        return redirect()->route('users.index', ['tab' => 'invitations'])
+            ->with('success', "Invitation to {$email} has been cancelled.");
     }
 }

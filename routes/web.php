@@ -104,6 +104,9 @@ Route::middleware('auth')->group(function () {
 // Users Management (Owner and Admin only)
 Route::middleware(['auth', 'ensure.not.guest'])->prefix('users')->name('users.')->group(function () {
     Route::get('/', [App\Http\Controllers\UserController::class, 'index'])->name('index');
+    Route::post('/invite', [App\Http\Controllers\UserController::class, 'invite'])->name('invite');
+    Route::post('/invitations/{invitation}/resend', [App\Http\Controllers\UserController::class, 'resendInvitation'])->name('invitations.resend');
+    Route::delete('/invitations/{invitation}', [App\Http\Controllers\UserController::class, 'cancelInvitation'])->name('invitations.cancel');
     Route::put('/{user}', [App\Http\Controllers\UserController::class, 'update'])->name('update');
     Route::post('/{user}/archive', [App\Http\Controllers\UserController::class, 'archive'])->name('archive');
     Route::post('/{user}/restore', [App\Http\Controllers\UserController::class, 'restore'])->name('restore');
