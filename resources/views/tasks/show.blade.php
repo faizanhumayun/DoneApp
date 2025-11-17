@@ -80,7 +80,7 @@
                     <div class="bg-white dark:bg-[#161615] rounded-lg shadow-sm border border-[#e3e3e0] dark:border-[#3E3E3A] p-6">
                         <h2 class="text-lg font-semibold mb-4 text-[#1b1b18] dark:text-[#EDEDEC]">Description</h2>
                         @if ($task->description)
-                            <div class="task-description text-sm text-[#1b1b18] dark:text-[#EDEDEC]">{{ $task->description }}</div>
+                            <div class="task-description text-sm text-[#1b1b18] dark:text-[#EDEDEC] prose prose-sm dark:prose-invert max-w-none">{!! $task->description !!}</div>
                         @else
                             <p class="text-sm text-[#706f6c] dark:text-[#A1A09A] italic">No description provided.</p>
                         @endif
@@ -202,17 +202,98 @@
                         <h2 class="text-lg font-semibold mb-4 text-[#1b1b18] dark:text-[#EDEDEC]">Details</h2>
 
                         <div class="space-y-3">
-                            <!-- Assignee -->
-                            <div>
-                                <p class="text-xs text-[#706f6c] dark:text-[#A1A09A] mb-1">Assignee</p>
-                                @if ($task->assignee)
-                                    <div class="flex items-center gap-2">
-                                        <img src="{{ $task->assignee->avatar_url }}" alt="{{ $task->assignee->full_name }}" class="w-6 h-6 rounded-full">
-                                        <span class="text-sm text-[#1b1b18] dark:text-[#EDEDEC]">{{ $task->assignee->full_name }}</span>
+                            <!-- Workflow Status -->
+                            <div id="status-section" x-data="{ currentStatus: {{ $task->workflow_status_id }} }">
+                                <p class="text-xs text-[#706f6c] dark:text-[#A1A09A] mb-2">Status</p>
+                                @if(isset($task->workflowStatus->is_final) && $task->workflowStatus->is_final)
+                                    <!-- Status is final - show locked message -->
+                                    <div class="p-3 bg-[#f5f5f5] dark:bg-[#0a0a0a] rounded-sm border border-[#e3e3e0] dark:border-[#3E3E3A]">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <svg class="w-4 h-4 text-[#706f6c] dark:text-[#A1A09A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                            </svg>
+                                            <span class="text-xs text-[#706f6c] dark:text-[#A1A09A] font-medium">Task is closed</span>
+                                        </div>
+                                        <span id="status-badge" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                                              style="background-color: {{ $task->workflowStatus->color }}; color: {{ $task->workflowStatus->text_color }}">
+                                            {{ $task->workflowStatus->name }}
+                                        </span>
                                     </div>
                                 @else
-                                    <p class="text-sm text-[#706f6c] dark:text-[#A1A09A]">Unassigned</p>
+                                    <!-- Status can be changed -->
+                                    @if($task->workflowStatus->name !== 'Closed')
+                                        <div class="relative">
+                                            <select
+                                                x-model="currentStatus"
+                                                @change="updateTaskStatus($event.target.value)"
+                                                class="w-full px-3 py-2 text-sm border border-[#e3e3e0] dark:border-[#3E3E3A] rounded-sm bg-white dark:bg-[#161615] text-[#1b1b18] dark:text-[#EDEDEC] focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                                                style="appearance: none;">
+                                                @foreach($workflowStatuses as $status)
+                                                    @php
+                                                        // Disable Open and Closed statuses for assignees (only owner/admin/creator can use them)
+                                                        $isRestrictedStatus = in_array($status->name, ['Open', 'Closed']);
+                                                        $canUseRestrictedStatus = in_array($userRole, ['owner', 'admin']) || $task->created_by === auth()->id();
+                                                        $shouldShow = !$isRestrictedStatus || $canUseRestrictedStatus || $task->workflow_status_id == $status->id;
+                                                    @endphp
+                                                    @if($shouldShow)
+                                                        <option value="{{ $status->id }}" {{ $task->workflow_status_id == $status->id ? 'selected' : '' }}>
+                                                            {{ $status->name }}
+                                                        </option>
+                                                    @endif
+                                                @endforeach
+                                            </select>
+
+                                            <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                                                <svg class="w-4 h-4 text-[#706f6c] dark:text-[#A1A09A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    <!-- Current status badge display -->
+                                    <div class="mt-2">
+                                        <span id="status-badge" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                                              style="background-color: {{ $task->workflowStatus->color }}; color: {{ $task->workflowStatus->text_color }}">
+                                            {{ $task->workflowStatus->name }}
+                                        </span>
+                                    </div>
                                 @endif
+                            </div>
+
+                            <!-- Assignee -->
+                            <div x-data="{ currentAssignee: {{ $task->assignee_id ?? 'null' }} }">
+                                <p class="text-xs text-[#706f6c] dark:text-[#A1A09A] mb-2">Assignee</p>
+                                <div class="relative">
+                                    <select
+                                        x-model="currentAssignee"
+                                        @change="updateTaskAssignee($event.target.value)"
+                                        class="w-full px-3 py-2 text-sm border border-[#e3e3e0] dark:border-[#3E3E3A] rounded-sm bg-white dark:bg-[#161615] text-[#1b1b18] dark:text-[#EDEDEC] focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                                        style="appearance: none;">
+                                        <option value="">Unassigned</option>
+                                        @foreach($projectMembers as $member)
+                                            <option value="{{ $member->id }}" {{ $task->assignee_id == $member->id ? 'selected' : '' }}>
+                                                {{ $member->full_name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                                        <svg class="w-4 h-4 text-[#706f6c] dark:text-[#A1A09A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <!-- Current assignee display -->
+                                <div class="mt-2" id="assignee-display">
+                                    @if ($task->assignee)
+                                        <div class="flex items-center gap-2">
+                                            <img src="{{ $task->assignee->avatar_url }}" alt="{{ $task->assignee->full_name }}" class="w-6 h-6 rounded-full" id="assignee-avatar">
+                                            <span class="text-sm text-[#1b1b18] dark:text-[#EDEDEC]" id="assignee-name">{{ $task->assignee->full_name }}</span>
+                                        </div>
+                                    @else
+                                        <p class="text-sm text-[#706f6c] dark:text-[#A1A09A]" id="assignee-name">Unassigned</p>
+                                    @endif
+                                </div>
                             </div>
 
                             <!-- Due Date -->
@@ -302,3 +383,154 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        function updateTaskAssignee(assigneeId) {
+            // Show loading state
+            const assigneeDisplay = document.getElementById('assignee-display');
+            const originalContent = assigneeDisplay.innerHTML;
+            assigneeDisplay.innerHTML = '<span class="text-xs text-[#706f6c] dark:text-[#A1A09A]">Updating...</span>';
+
+            fetch('{{ route('tasks.updateAssignee', [$project, $task]) }}', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    assignee_id: assigneeId || null
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update assignee display
+                    if (data.assignee) {
+                        assigneeDisplay.innerHTML = `
+                            <div class="flex items-center gap-2">
+                                <img src="${data.assignee.avatar_url}" alt="${data.assignee.full_name}" class="w-6 h-6 rounded-full" id="assignee-avatar">
+                                <span class="text-sm text-[#1b1b18] dark:text-[#EDEDEC]" id="assignee-name">${data.assignee.full_name}</span>
+                            </div>
+                        `;
+                    } else {
+                        assigneeDisplay.innerHTML = '<p class="text-sm text-[#706f6c] dark:text-[#A1A09A]" id="assignee-name">Unassigned</p>';
+                    }
+
+                    // Show success message
+                    showSuccessMessage('Assignee updated successfully');
+                } else {
+                    assigneeDisplay.innerHTML = originalContent;
+                    showErrorMessage(data.error || 'Failed to update assignee');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating assignee:', error);
+                assigneeDisplay.innerHTML = originalContent;
+                showErrorMessage('An error occurred while updating assignee');
+            });
+        }
+
+        function updateTaskStatus(statusId) {
+            // Show loading state
+            const statusBadge = document.getElementById('status-badge');
+            const originalContent = statusBadge.innerHTML;
+            statusBadge.innerHTML = '<span class="text-xs">Updating...</span>';
+
+            fetch('{{ route('tasks.updateStatus', [$project, $task]) }}', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    workflow_status_id: statusId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Status update response:', data);
+                if (data.success) {
+                    // Update the status badge in the header
+                    const headerBadges = document.querySelectorAll('.inline-flex.items-center.px-2.py-1.rounded-full');
+                    if (headerBadges.length > 0) {
+                        headerBadges[0].style.backgroundColor = data.status.color;
+                        headerBadges[0].style.color = data.status.text_color;
+                        headerBadges[0].textContent = data.status.name;
+                    }
+
+                    // Check if the new status is final (closed) - check both is_final flag and status name
+                    const isClosed = data.status.is_final || data.status.name === 'Closed' || data.status.name === 'closed';
+
+                    if (isClosed) {
+                        // Replace the entire status section with locked view
+                        const statusSection = document.getElementById('status-section');
+                        if (statusSection) {
+                            statusSection.innerHTML = `
+                                <p class="text-xs text-[#706f6c] dark:text-[#A1A09A] mb-2">Status</p>
+                                <div class="p-3 bg-[#f5f5f5] dark:bg-[#0a0a0a] rounded-sm border border-[#e3e3e0] dark:border-[#3E3E3A]">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <svg class="w-4 h-4 text-[#706f6c] dark:text-[#A1A09A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                        </svg>
+                                        <span class="text-xs text-[#706f6c] dark:text-[#A1A09A] font-medium">Task is closed</span>
+                                    </div>
+                                    <span id="status-badge" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                                          style="background-color: ${data.status.color}; color: ${data.status.text_color}">
+                                        ${data.status.name}
+                                    </span>
+                                </div>
+                            `;
+                            console.log('Status section replaced with locked view');
+                        } else {
+                            console.error('Status section not found');
+                        }
+                    } else {
+                        // Update the sidebar status badge normally
+                        statusBadge.style.backgroundColor = data.status.color;
+                        statusBadge.style.color = data.status.text_color;
+                        statusBadge.textContent = data.status.name;
+                        console.log('Status badge updated:', data.status.name);
+                    }
+
+                    // Show success message
+                    showSuccessMessage('Status updated successfully');
+                } else {
+                    statusBadge.innerHTML = originalContent;
+                    showErrorMessage('Failed to update status');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating status:', error);
+                statusBadge.innerHTML = originalContent;
+                showErrorMessage('An error occurred while updating status');
+            });
+        }
+
+        function showSuccessMessage(message) {
+            const alert = document.createElement('div');
+            alert.className = 'fixed top-20 right-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900 rounded-sm p-4 shadow-lg z-50';
+            alert.innerHTML = `<p class="text-sm text-green-800 dark:text-green-400">${message}</p>`;
+            document.body.appendChild(alert);
+
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        }
+
+        function showErrorMessage(message) {
+            const alert = document.createElement('div');
+            alert.className = 'fixed top-20 right-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900 rounded-sm p-4 shadow-lg z-50';
+            alert.innerHTML = `<p class="text-sm text-red-800 dark:text-red-400">${message}</p>`;
+            document.body.appendChild(alert);
+
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        }
+    </script>
+@endpush

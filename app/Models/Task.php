@@ -96,7 +96,7 @@ class Task extends Model
      */
     public function comments(): HasMany
     {
-        return $this->hasMany(TaskComment::class);
+        return $this->hasMany(TaskComment::class)->orderBy('created_at', 'desc');
     }
 
     /**

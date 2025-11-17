@@ -6,8 +6,11 @@ use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Project;
 use App\Models\Task;
+use App\Models\WorkflowStatus;
 use App\Services\TaskService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
@@ -355,6 +358,105 @@ class TaskController extends Controller
         return redirect()
             ->route('tasks.show', [$project, $task])
             ->with('message', 'Task updated successfully.');
+    }
+
+    /**
+     * Update the task workflow status.
+     */
+    public function updateStatus(Request $request, Project $project, Task $task): JsonResponse
+    {
+        // Check if current status is final (closed)
+        if ($task->workflowStatus->is_final) {
+            return response()->json([
+                'error' => 'Cannot change status of a closed task. The task is already finished.'
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'workflow_status_id' => ['required', 'exists:workflow_statuses,id'],
+        ]);
+
+        // Verify the workflow status belongs to the project's workflow
+        $workflowStatus = WorkflowStatus::find($validated['workflow_status_id']);
+        if ($workflowStatus->workflow_id !== $project->workflow_id) {
+            return response()->json(['error' => 'Invalid workflow status for this project.'], 422);
+        }
+
+        // Check if user is trying to set a restricted status (Open or Closed)
+        $restrictedStatuses = ['Open', 'Closed'];
+        if (in_array($workflowStatus->name, $restrictedStatuses)) {
+            // Get user's role in the project
+            $userRole = $project->users()
+                ->where('user_id', Auth::id())
+                ->first()
+                ?->pivot
+                ->role ?? 'member';
+
+            // Only owner, admin, or task creator can use restricted statuses
+            $canUseRestrictedStatus = in_array($userRole, ['owner', 'admin']) || $task->created_by === Auth::id();
+
+            if (!$canUseRestrictedStatus) {
+                return response()->json([
+                    'error' => 'Only project owners, admins, or task creators can set status to ' . $workflowStatus->name . '.'
+                ], 403);
+            }
+        }
+
+        $this->taskService->updateTask(
+            $task,
+            ['workflow_status_id' => $validated['workflow_status_id']],
+            Auth::user()
+        );
+
+        // Reload task with relationships
+        $task->load('workflowStatus');
+
+        return response()->json([
+            'success' => true,
+            'status' => [
+                'id' => $task->workflowStatus->id,
+                'name' => $task->workflowStatus->name,
+                'color' => $task->workflowStatus->color,
+                'text_color' => $task->workflowStatus->text_color,
+                'is_final' => $task->workflowStatus->is_final ?? false,
+            ],
+        ]);
+    }
+
+    /**
+     * Update the task assignee.
+     */
+    public function updateAssignee(Request $request, Project $project, Task $task): JsonResponse
+    {
+        $validated = $request->validate([
+            'assignee_id' => ['nullable', 'exists:users,id'],
+        ]);
+
+        // If assignee_id is provided, verify they are a member of the project
+        if (isset($validated['assignee_id']) && $validated['assignee_id']) {
+            $isMember = $project->users()->where('user_id', $validated['assignee_id'])->exists();
+            if (!$isMember) {
+                return response()->json(['error' => 'User is not a member of this project.'], 422);
+            }
+        }
+
+        $this->taskService->updateTask(
+            $task,
+            ['assignee_id' => $validated['assignee_id']],
+            Auth::user()
+        );
+
+        // Reload task with relationships
+        $task->load('assignee');
+
+        return response()->json([
+            'success' => true,
+            'assignee' => $task->assignee ? [
+                'id' => $task->assignee->id,
+                'full_name' => $task->assignee->full_name,
+                'avatar_url' => $task->assignee->avatar_url,
+            ] : null,
+        ]);
     }
 
     /**

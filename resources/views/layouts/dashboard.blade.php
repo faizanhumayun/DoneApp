@@ -180,12 +180,12 @@
                     </button>
 
                     <!-- Notifications Bell -->
-                    <button class="p-2 text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a] rounded-sm transition-all relative">
+                    <button @click="$dispatch('toggle-notifications')" class="p-2 text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a] rounded-sm transition-all relative" x-data="{ count: 0 }" x-init="$watch('$store.notifications', value => { count = value ? value.unread_count : 0 })">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                         </svg>
-                        <!-- Notification badge -->
-                        <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                        <!-- Notification badge with count -->
+                        <span x-show="count > 0" x-text="count > 99 ? '99+' : count" class="absolute -top-1 -right-1 min-w-[1.25rem] h-5 px-1 flex items-center justify-center bg-red-500 text-white text-xs font-medium rounded-full" x-cloak></span>
                     </button>
 
                     <!-- Add New Button (Not visible to guests) -->
@@ -276,6 +276,128 @@
             </div>
         </div>
     </nav>
+
+    <!-- Notification Drawer -->
+    <div x-data="notificationDrawer()"
+         @toggle-notifications.window="toggleDrawer()"
+         x-show="isOpen"
+         x-cloak
+         class="fixed inset-0 z-50 overflow-hidden"
+         style="display: none;">
+        <!-- Overlay -->
+        <div x-show="isOpen"
+             x-transition:enter="transition-opacity ease-linear duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition-opacity ease-linear duration-300"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             @click="closeDrawer()"
+             class="absolute inset-0 bg-black bg-opacity-50"></div>
+
+        <!-- Drawer -->
+        <div x-show="isOpen"
+             x-transition:enter="transform transition ease-in-out duration-300"
+             x-transition:enter-start="translate-x-full"
+             x-transition:enter-end="translate-x-0"
+             x-transition:leave="transform transition ease-in-out duration-300"
+             x-transition:leave-start="translate-x-0"
+             x-transition:leave-end="translate-x-full"
+             class="absolute right-0 top-0 h-full w-full sm:w-96 bg-white dark:bg-[#161615] shadow-xl flex flex-col">
+
+            <!-- Header -->
+            <div class="flex items-center justify-between p-4 border-b border-[#e3e3e0] dark:border-[#3E3E3A]">
+                <h2 class="text-lg font-semibold text-[#1b1b18] dark:text-[#EDEDEC]">Notifications</h2>
+                <button @click="closeDrawer()" class="p-2 text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a] rounded-sm transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex border-b border-[#e3e3e0] dark:border-[#3E3E3A]">
+                <button @click="activeTab = 'workspace'" :class="activeTab === 'workspace' ? 'border-b-2 border-[#1b1b18] dark:border-[#EDEDEC] text-[#1b1b18] dark:text-[#EDEDEC]' : 'text-[#706f6c] dark:text-[#A1A09A]'" class="flex-1 px-4 py-3 text-xs font-medium transition-all">
+                    Workspace
+                </button>
+                <button @click="activeTab = 'mentions'" :class="activeTab === 'mentions' ? 'border-b-2 border-[#1b1b18] dark:border-[#EDEDEC] text-[#1b1b18] dark:text-[#EDEDEC]' : 'text-[#706f6c] dark:text-[#A1A09A]'" class="flex-1 px-4 py-3 text-xs font-medium transition-all">
+                    Mentions
+                </button>
+                <button @click="activeTab = 'conversations'" :class="activeTab === 'conversations' ? 'border-b-2 border-[#1b1b18] dark:border-[#EDEDEC] text-[#1b1b18] dark:text-[#EDEDEC]' : 'text-[#706f6c] dark:text-[#A1A09A]'" class="flex-1 px-4 py-3 text-xs font-medium transition-all">
+                    Conversations
+                </button>
+                <button @click="activeTab = 'invites'" :class="activeTab === 'invites' ? 'border-b-2 border-[#1b1b18] dark:border-[#EDEDEC] text-[#1b1b18] dark:text-[#EDEDEC]' : 'text-[#706f6c] dark:text-[#A1A09A]'" class="flex-1 px-4 py-3 text-xs font-medium transition-all">
+                    Invites
+                </button>
+            </div>
+
+            <!-- Notification List -->
+            <div class="flex-1 overflow-y-auto p-4">
+                <!-- Workspace Notifications -->
+                <div x-show="activeTab === 'workspace'" class="space-y-3">
+                    <template x-if="!loading && notifications.workspace && notifications.workspace.length === 0">
+                        <p class="text-sm text-[#706f6c] dark:text-[#A1A09A] text-center py-8">No workspace notifications</p>
+                    </template>
+                    <template x-for="notification in notifications.workspace" :key="notification.id">
+                        <div @click="handleNotificationClick(notification)" class="p-3 bg-[#f5f5f5] dark:bg-[#0a0a0a] rounded-sm cursor-pointer hover:bg-[#e3e3e0] dark:hover:bg-[#1C1C1A] transition-all" :class="!notification.is_read ? 'border-l-4 border-blue-500' : ''">
+                            <h4 class="text-sm font-medium text-[#1b1b18] dark:text-[#EDEDEC]" x-text="notification.title"></h4>
+                            <p class="text-xs text-[#706f6c] dark:text-[#A1A09A] mt-1" x-text="notification.message"></p>
+                            <span class="text-xs text-[#706f6c] dark:text-[#A1A09A]" x-text="formatDate(notification.created_at)"></span>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Mentions Notifications -->
+                <div x-show="activeTab === 'mentions'" class="space-y-3">
+                    <template x-if="!loading && notifications.mentions && notifications.mentions.length === 0">
+                        <p class="text-sm text-[#706f6c] dark:text-[#A1A09A] text-center py-8">No mention notifications</p>
+                    </template>
+                    <template x-for="notification in notifications.mentions" :key="notification.id">
+                        <div @click="handleNotificationClick(notification)" class="p-3 bg-[#f5f5f5] dark:bg-[#0a0a0a] rounded-sm cursor-pointer hover:bg-[#e3e3e0] dark:hover:bg-[#1C1C1A] transition-all" :class="!notification.is_read ? 'border-l-4 border-blue-500' : ''">
+                            <h4 class="text-sm font-medium text-[#1b1b18] dark:text-[#EDEDEC]" x-text="notification.title"></h4>
+                            <p class="text-xs text-[#706f6c] dark:text-[#A1A09A] mt-1" x-text="notification.message"></p>
+                            <span class="text-xs text-[#706f6c] dark:text-[#A1A09A]" x-text="formatDate(notification.created_at)"></span>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Conversation Notifications -->
+                <div x-show="activeTab === 'conversations'" class="space-y-3">
+                    <template x-if="!loading && notifications.conversations && notifications.conversations.length === 0">
+                        <p class="text-sm text-[#706f6c] dark:text-[#A1A09A] text-center py-8">No conversation notifications</p>
+                    </template>
+                    <template x-for="notification in notifications.conversations" :key="notification.id">
+                        <div @click="handleNotificationClick(notification)" class="p-3 bg-[#f5f5f5] dark:bg-[#0a0a0a] rounded-sm cursor-pointer hover:bg-[#e3e3e0] dark:hover:bg-[#1C1C1A] transition-all" :class="!notification.is_read ? 'border-l-4 border-blue-500' : ''">
+                            <h4 class="text-sm font-medium text-[#1b1b18] dark:text-[#EDEDEC]" x-text="notification.title"></h4>
+                            <p class="text-xs text-[#706f6c] dark:text-[#A1A09A] mt-1" x-text="notification.message"></p>
+                            <span class="text-xs text-[#706f6c] dark:text-[#A1A09A]" x-text="formatDate(notification.created_at)"></span>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Invite Notifications -->
+                <div x-show="activeTab === 'invites'" class="space-y-3">
+                    <template x-if="!loading && notifications.invites && notifications.invites.length === 0">
+                        <p class="text-sm text-[#706f6c] dark:text-[#A1A09A] text-center py-8">No invite notifications</p>
+                    </template>
+                    <template x-for="notification in notifications.invites" :key="notification.id">
+                        <div @click="handleNotificationClick(notification)" class="p-3 bg-[#f5f5f5] dark:bg-[#0a0a0a] rounded-sm cursor-pointer hover:bg-[#e3e3e0] dark:hover:bg-[#1C1C1A] transition-all" :class="!notification.is_read ? 'border-l-4 border-blue-500' : ''">
+                            <h4 class="text-sm font-medium text-[#1b1b18] dark:text-[#EDEDEC]" x-text="notification.title"></h4>
+                            <p class="text-xs text-[#706f6c] dark:text-[#A1A09A] mt-1" x-text="notification.message"></p>
+                            <span class="text-xs text-[#706f6c] dark:text-[#A1A09A]" x-text="formatDate(notification.created_at)"></span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Footer Actions -->
+            <div class="p-4 border-t border-[#e3e3e0] dark:border-[#3E3E3A]">
+                <button @click="markAllAsRead()" class="w-full px-4 py-2 text-sm text-[#706f6c] dark:text-[#A1A09A] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a] rounded-sm transition-all">
+                    Mark All as Read
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Main Content Area (with top padding to account for fixed nav) -->
     <main class="pt-14 min-h-screen">
@@ -460,6 +582,166 @@
                 console.log('Session timeout initialized: 20 minutes idle timeout');
             });
         })();
+    </script>
+
+    <!-- Notification Drawer JavaScript -->
+    <script>
+        function notificationDrawer() {
+            return {
+                isOpen: false,
+                activeTab: 'workspace',
+                loading: false,
+                notifications: {
+                    workspace: [],
+                    mentions: [],
+                    conversations: [],
+                    invites: [],
+                    unread_count: 0
+                },
+
+                init() {
+                    // Fetch notifications on load
+                    this.fetchNotifications();
+
+                    // Setup Alpine store for global access
+                    Alpine.store('notifications', this.notifications);
+
+                    // Refresh notifications every 60 seconds
+                    setInterval(() => {
+                        this.fetchNotifications();
+                    }, 60000);
+                },
+
+                toggleDrawer() {
+                    this.isOpen = !this.isOpen;
+                    if (this.isOpen) {
+                        this.fetchNotifications();
+                    }
+                },
+
+                closeDrawer() {
+                    this.isOpen = false;
+                },
+
+                async fetchNotifications() {
+                    try {
+                        this.loading = true;
+                        const response = await fetch('/notifications', {
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            this.notifications = data;
+                            Alpine.store('notifications', data);
+                        }
+                    } catch (error) {
+                        console.error('Failed to fetch notifications:', error);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                async handleNotificationClick(notification) {
+                    // Immediately remove notification from list (optimistic update)
+                    this.removeNotificationFromList(notification);
+
+                    // Mark as read in background
+                    this.markAsRead(notification.id);
+
+                    // Navigate to the link if provided
+                    if (notification.data && notification.data.link) {
+                        window.location.href = notification.data.link;
+                    }
+                },
+
+                removeNotificationFromList(notification) {
+                    const type = notification.type;
+
+                    // Remove from the specific type array
+                    if (type === 'workspace') {
+                        this.notifications.workspace = this.notifications.workspace.filter(n => n.id !== notification.id);
+                    } else if (type === 'mention') {
+                        this.notifications.mentions = this.notifications.mentions.filter(n => n.id !== notification.id);
+                    } else if (type === 'conversation') {
+                        this.notifications.conversations = this.notifications.conversations.filter(n => n.id !== notification.id);
+                    } else if (type === 'invite') {
+                        this.notifications.invites = this.notifications.invites.filter(n => n.id !== notification.id);
+                    }
+
+                    // Update unread count
+                    this.notifications.unread_count = Math.max(0, this.notifications.unread_count - 1);
+
+                    // Update Alpine store
+                    Alpine.store('notifications', this.notifications);
+                },
+
+                async markAsRead(notificationId) {
+                    try {
+                        await fetch(`/notifications/${notificationId}/read`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+                    } catch (error) {
+                        console.error('Failed to mark notification as read:', error);
+                        // Silently fail - the notification was already removed from the UI
+                    }
+                },
+
+                async markAllAsRead() {
+                    try {
+                        // Immediately clear all notifications (optimistic update)
+                        this.notifications.workspace = [];
+                        this.notifications.mentions = [];
+                        this.notifications.conversations = [];
+                        this.notifications.invites = [];
+                        this.notifications.unread_count = 0;
+
+                        // Update Alpine store
+                        Alpine.store('notifications', this.notifications);
+
+                        // Mark all as read in background
+                        await fetch('/notifications/mark-all-read', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+                    } catch (error) {
+                        console.error('Failed to mark all notifications as read:', error);
+                        // Silently fail - notifications were already cleared from the UI
+                    }
+                },
+
+                formatDate(dateString) {
+                    const date = new Date(dateString);
+                    const now = new Date();
+                    const diff = now - date;
+                    const seconds = Math.floor(diff / 1000);
+                    const minutes = Math.floor(seconds / 60);
+                    const hours = Math.floor(minutes / 60);
+                    const days = Math.floor(hours / 24);
+
+                    if (seconds < 60) return 'Just now';
+                    if (minutes < 60) return `${minutes}m ago`;
+                    if (hours < 24) return `${hours}h ago`;
+                    if (days < 7) return `${days}d ago`;
+
+                    return date.toLocaleDateString();
+                }
+            }
+        }
     </script>
 
     @stack('scripts')

@@ -10,6 +10,10 @@ use Illuminate\Support\Str;
 
 class TaskService
 {
+    public function __construct(
+        protected NotificationService $notificationService
+    ) {}
+
     /**
      * Create a new task.
      */
@@ -49,6 +53,16 @@ class TaskService
                 'created',
                 "{$user->full_name} created this task."
             );
+
+            // Notify assignee if task is assigned to someone
+            if ($task->assignee_id && $task->assignee_id !== $user->id) {
+                $this->notificationService->createTaskAssignmentNotification(
+                    $task->assignee,
+                    $user,
+                    $task,
+                    $project
+                );
+            }
 
             return $task->load(['project', 'workflowStatus', 'assignee', 'creator', 'tags', 'watchers']);
         });
@@ -95,6 +109,16 @@ class TaskService
                 $oldAssignee = $oldValues['assignee_id'] ? User::find($oldValues['assignee_id'])?->full_name : 'Unassigned';
                 $newAssignee = $task->assignee_id ? User::find($task->assignee_id)?->full_name : 'Unassigned';
                 $task->logActivity('assignee_changed', "{$user->full_name} changed assignee from {$oldAssignee} to {$newAssignee}.", $oldAssignee, $newAssignee);
+
+                // Notify new assignee if task is assigned to someone
+                if ($task->assignee_id && $task->assignee_id !== $user->id) {
+                    $this->notificationService->createTaskAssignmentNotification(
+                        $task->assignee,
+                        $user,
+                        $task,
+                        $task->project
+                    );
+                }
             }
 
             if ($task->isDirty('due_date')) {

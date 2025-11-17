@@ -20,6 +20,7 @@ class WorkflowStatus extends Model
         'name',
         'color',
         'is_active',
+        'is_final',
         'position',
     ];
 
@@ -32,6 +33,7 @@ class WorkflowStatus extends Model
     {
         return [
             'is_active' => 'boolean',
+            'is_final' => 'boolean',
             'position' => 'integer',
         ];
     }

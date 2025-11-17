@@ -331,6 +331,41 @@ class DiscussionController extends Controller
         // Update discussion's updated_at timestamp
         $discussion->touch();
 
+        // Create notifications for mentions
+        $notificationService = app(\App\Services\NotificationService::class);
+        $link = route('discussions.show', $discussion) . '#comments';
+        $notificationService->notifyMentionedUsers(
+            $validated['body'],
+            $user,
+            "a comment on discussion: {$discussion->title}",
+            $link
+        );
+
+        // Notify discussion participants about new comment
+        foreach ($discussion->participants as $participant) {
+            if ($participant->id !== $user->id) {
+                $notificationService->createCommentNotification(
+                    $participant,
+                    $user,
+                    "discussion: {$discussion->title}",
+                    $link
+                );
+            }
+        }
+
+        // Notify discussion creator if not already notified
+        if ($discussion->creator && $discussion->creator->id !== $user->id) {
+            $alreadyNotified = $discussion->participants->contains('id', $discussion->creator->id);
+            if (!$alreadyNotified) {
+                $notificationService->createCommentNotification(
+                    $discussion->creator,
+                    $user,
+                    "discussion: {$discussion->title}",
+                    $link
+                );
+            }
+        }
+
         return redirect()->route('discussions.show', $discussion)
             ->with('success', 'Comment added successfully.');
     }

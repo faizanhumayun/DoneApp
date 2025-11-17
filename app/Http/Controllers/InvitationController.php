@@ -135,6 +135,18 @@ class InvitationController extends Controller
                 'status' => 'accepted',
             ]);
 
+            // Create welcome notification for new user
+            \App\Models\Notification::create([
+                'user_id' => $user->id,
+                'company_id' => $invitation->company_id,
+                'type' => 'invite',
+                'title' => 'Welcome to the team!',
+                'message' => "You've successfully joined {$invitation->company->name}",
+                'data' => [
+                    'link' => route('dashboard'),
+                ],
+            ]);
+
             // Log in the user
             Auth::login($user);
         });

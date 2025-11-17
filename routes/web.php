@@ -93,12 +93,26 @@ Route::middleware('auth')->group(function () {
 
     // Guests can comment on tasks they can access
     Route::post('/projects/{project}/tasks/{task}/comments', [App\Http\Controllers\TaskCommentController::class, 'store'])->name('task-comments.store');
+
+    // Update task status (available to all authenticated users)
+    Route::patch('/projects/{project}/tasks/{task}/status', [App\Http\Controllers\TaskController::class, 'updateStatus'])->name('tasks.updateStatus');
+
+    // Update task assignee (available to all authenticated users)
+    Route::patch('/projects/{project}/tasks/{task}/assignee', [App\Http\Controllers\TaskController::class, 'updateAssignee'])->name('tasks.updateAssignee');
 });
 
 // Profile
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+});
+
+// Notifications
+Route::middleware('auth')->prefix('notifications')->name('notifications.')->group(function () {
+    Route::get('/', [App\Http\Controllers\NotificationController::class, 'index'])->name('index');
+    Route::post('/{notification}/read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('markAsRead');
+    Route::post('/mark-all-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('markAllAsRead');
+    Route::delete('/{notification}', [App\Http\Controllers\NotificationController::class, 'destroy'])->name('destroy');
 });
 
 // Users Management (Owner and Admin only)

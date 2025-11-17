@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\DB;
 
 class TaskCommentService
 {
+    public function __construct(
+        protected NotificationService $notificationService
+    ) {}
+
     /**
      * Add a comment to a task.
      */
@@ -27,6 +31,37 @@ class TaskCommentService
                 'comment_added',
                 "{$user->full_name} added a comment."
             );
+
+            // Create notifications for mentions
+            $link = route('tasks.show', [$task->project, $task]) . '#comments';
+            $this->notificationService->notifyMentionedUsers(
+                $data['comment'],
+                $user,
+                "a comment on task: {$task->title}",
+                $link
+            );
+
+            // Notify task assignee about new comment (if not the commenter)
+            if ($task->assignee && $task->assignee->id !== $user->id) {
+                $this->notificationService->createCommentNotification(
+                    $task->assignee,
+                    $user,
+                    "task: {$task->title}",
+                    $link
+                );
+            }
+
+            // Notify watchers about new comment
+            foreach ($task->watchers as $watcher) {
+                if ($watcher->id !== $user->id) {
+                    $this->notificationService->createCommentNotification(
+                        $watcher,
+                        $user,
+                        "task: {$task->title}",
+                        $link
+                    );
+                }
+            }
 
             return $comment->load('user');
         });
