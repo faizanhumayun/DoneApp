@@ -108,14 +108,14 @@
 
                         <!-- Description -->
                         <div class="bg-white dark:bg-[#161615] rounded-lg shadow-sm border border-[#e3e3e0] dark:border-[#3E3E3A] p-6">
-                            <label for="description" class="block text-sm font-medium mb-2">Description</label>
-                            <textarea
-                                id="description"
+                            <x-quill-editor
                                 name="description"
-                                rows="10"
+                                label="Description"
+                                :value="old('description', $task->description)"
                                 placeholder="Write a description..."
-                                class="description-textarea w-full px-4 py-3 border border-[#e3e3e0] dark:border-[#3E3E3A] rounded-sm bg-white dark:bg-[#161615] text-[#1b1b18] dark:text-[#EDEDEC] focus:ring-2 focus:ring-[#1b1b18] dark:focus:ring-[#EDEDEC] focus:border-transparent"
-                            >{{ old('description', $task->description) }}</textarea>
+                                height="250px"
+                                :teamMembers="$teamMembers"
+                            />
                         </div>
                     </div>
 

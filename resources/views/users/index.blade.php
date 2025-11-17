@@ -153,9 +153,9 @@
 
     <!-- Invite User Modal -->
     <div id="invite-user-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white dark:bg-[#161615] rounded-lg shadow-xl border border-[#e3e3e0] dark:border-[#3E3E3A] p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="bg-white dark:bg-[#161615] rounded-lg shadow-xl border border-[#e3e3e0] dark:border-[#3E3E3A] p-6 max-w-md w-full mx-4">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-semibold">Invite Team Members</h3>
+                <h3 class="text-xl font-semibold">Invite Team Member</h3>
                 <button
                     onclick="document.getElementById('invite-user-modal').classList.add('hidden')"
                     class="text-[#706f6c] dark:text-[#A1A09A] hover:text-[#1b1b18] dark:hover:text-[#EDEDEC]"
@@ -167,29 +167,44 @@
             </div>
 
             <p class="text-sm text-[#706f6c] dark:text-[#A1A09A] mb-6">
-                Send email invitations to team members. They'll receive a link to join your workspace.
+                Send an email invitation to a team member. They'll receive a link to join your workspace.
             </p>
 
             <form method="POST" action="{{ route('users.invite') }}">
                 @csrf
 
                 <div class="space-y-4 mb-6">
-                    @for ($i = 0; $i < 5; $i++)
-                        <div>
-                            <input
-                                type="email"
-                                name="team_emails[{{ $i }}]"
-                                placeholder="teammate@company.com (optional)"
-                                class="w-full px-4 py-2 border border-[#e3e3e0] dark:border-[#3E3E3A] rounded-sm bg-white dark:bg-[#161615] text-[#1b1b18] dark:text-[#EDEDEC] focus:ring-2 focus:ring-[#1b1b18] dark:focus:ring-[#EDEDEC] focus:border-transparent"
-                            >
-                        </div>
-                    @endfor
-                </div>
+                    <!-- Email Input -->
+                    <div>
+                        <label for="invite_email" class="block text-sm font-medium mb-2">Email Address</label>
+                        <input
+                            type="email"
+                            id="invite_email"
+                            name="email"
+                            required
+                            placeholder="teammate@company.com"
+                            class="w-full px-4 py-2 border border-[#e3e3e0] dark:border-[#3E3E3A] rounded-sm bg-white dark:bg-[#161615] text-[#1b1b18] dark:text-[#EDEDEC] focus:ring-2 focus:ring-[#1b1b18] dark:focus:ring-[#EDEDEC] focus:border-transparent"
+                        >
+                    </div>
 
-                <div class="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-900 rounded-sm mb-6">
-                    <p class="text-sm text-blue-800 dark:text-blue-400">
-                        <strong>Note:</strong> Invited team members will be added as "Members" by default. You can change their role after they join.
-                    </p>
+                    <!-- Role Selection -->
+                    <div>
+                        <label for="invite_role" class="block text-sm font-medium mb-2">Role</label>
+                        <select
+                            id="invite_role"
+                            name="role"
+                            required
+                            class="w-full px-4 py-2 border border-[#e3e3e0] dark:border-[#3E3E3A] rounded-sm bg-white dark:bg-[#161615] text-[#1b1b18] dark:text-[#EDEDEC] focus:ring-2 focus:ring-[#1b1b18] dark:focus:ring-[#EDEDEC] focus:border-transparent"
+                        >
+                            <option value="member" selected>Member</option>
+                            <option value="admin">Admin</option>
+                            <option value="owner">Owner</option>
+                            <option value="guest">Guest</option>
+                        </select>
+                        <p class="text-xs text-[#706f6c] dark:text-[#A1A09A] mt-1">
+                            Select the role for this team member
+                        </p>
+                    </div>
                 </div>
 
                 <div class="flex gap-3">
@@ -197,7 +212,7 @@
                         type="submit"
                         class="flex-1 px-5 py-2 bg-[#1b1b18] dark:bg-[#eeeeec] text-white dark:text-[#1C1C1A] hover:bg-black dark:hover:bg-white font-medium rounded-sm transition-all"
                     >
-                        Send Invitations
+                        Send Invitation
                     </button>
                     <button
                         type="button"

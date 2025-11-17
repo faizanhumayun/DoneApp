@@ -1,9 +1,5 @@
 @extends('layouts.dashboard')
 
-@push('styles')
-<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
-@endpush
-
 @section('content')
     <div class="p-6 lg:p-8">
         <div class="max-w-4xl mx-auto">
@@ -185,12 +181,20 @@
                             <label for="about_yourself_editor" class="block text-sm font-medium mb-2">About Yourself (Optional)</label>
 
                             <!-- Quill Editor Container -->
-                            <div id="about_yourself_editor" class="bg-white dark:bg-[#161615] border border-[#e3e3e0] dark:border-[#3E3E3A] rounded-sm @error('about_yourself') border-red-500 @enderror"></div>
+                            <div
+                                id="about_yourself_editor"
+                                class="bg-white dark:bg-[#161615] border border-[#e3e3e0] dark:border-[#3E3E3A] rounded-sm @error('about_yourself') border-red-500 @enderror"
+                                style="max-height: 210px;"
+                            ></div>
 
                             <!-- Hidden input to store the content for form submission -->
-                            <input type="hidden" name="about_yourself" id="about_yourself">
+                            <input type="hidden" name="about_yourself" id="about_yourself" value="{{ old('about_yourself', $user->about_yourself ?? '') }}">
 
-                            <p class="text-xs text-[#706f6c] dark:text-[#A1A09A] mt-1">Maximum 500 characters</p>
+                            <p class="text-xs text-[#706f6c] dark:text-[#A1A09A] mt-1">Maximum 500 characters. Type @ to mention team members.</p>
+
+                            @error('about_yourself')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
                     </div>
                 </div>
@@ -304,61 +308,104 @@
     </div>
 @endsection
 
+@once
+    @push('styles')
+        <!-- Quill Editor CSS -->
+        <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+        <!-- Quill Mention CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/quill-mention@3.2.0/dist/quill.mention.min.css" rel="stylesheet">
+        <style>
+            /* Limit mention list height and add scrolling */
+            .ql-mention-list-container {
+                max-height: 200px !important;
+                overflow-y: auto !important;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            }
+            .mention-item {
+                padding: 8px 12px;
+                cursor: pointer;
+            }
+            .mention-item:hover {
+                background-color: #f5f5f5;
+            }
+            .dark .mention-item:hover {
+                background-color: #3E3E3A;
+            }
+        </style>
+    @endpush
+@endonce
+
 @push('scripts')
-<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
-<style>
-    /* Set minimum height for Quill editor to match 4 rows textarea */
-    #about_yourself_editor .ql-editor {
-        min-height: 96px;
-        max-height: 200px;
-        overflow-y: auto;
-    }
-</style>
-<script>
-    // Initialize Quill editor
-    var quill = new Quill('#about_yourself_editor', {
-        theme: 'snow',
-        placeholder: 'Tell us a bit about yourself...',
-        modules: {
-            toolbar: [
-                ['bold', 'italic', 'underline'],
-                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                ['link'],
-                ['clean']
-            ]
-        }
-    });
+    <!-- Quill Editor JS -->
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <!-- Quill Mention JS -->
+    <script src="https://cdn.jsdelivr.net/npm/quill-mention@3.2.0/dist/quill.mention.min.js"></script>
 
-    // Load existing content
-    var existingContent = {!! json_encode(old('about_yourself', $user->about_yourself)) !!};
-    if (existingContent) {
-        // Check if content is HTML or plain text
-        if (existingContent.indexOf('<') !== -1) {
-            quill.root.innerHTML = existingContent;
-        } else {
-            quill.setText(existingContent);
-        }
-    }
+    <script>
+        // Team members data for mentions
+        const teamMembers = @json($teamMembers);
 
-    // Update hidden input on text change
-    quill.on('text-change', function() {
-        var html = quill.root.innerHTML;
-        // If editor is empty, set to null
-        if (quill.getText().trim().length === 0) {
-            document.getElementById('about_yourself').value = '';
-        } else {
-            document.getElementById('about_yourself').value = html;
-        }
-    });
+        // Initialize Quill editor with mentions
+        const quill = new Quill('#about_yourself_editor', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['link'],
+                    ['clean']
+                ],
+                mention: {
+                    allowedChars: /^[A-Za-z\sÅÄÖåäö]*$/,
+                    mentionDenotationChars: ["@"],
+                    source: function(searchTerm, renderList, mentionChar) {
+                        let values;
 
-    // Before form submit, update hidden field
-    document.querySelector('form').addEventListener('submit', function() {
-        var html = quill.root.innerHTML;
-        if (quill.getText().trim().length === 0) {
-            document.getElementById('about_yourself').value = '';
-        } else {
-            document.getElementById('about_yourself').value = html;
+                        if (searchTerm.length === 0) {
+                            values = teamMembers;
+                        } else {
+                            const matches = [];
+                            for (let i = 0; i < teamMembers.length; i++) {
+                                if (
+                                    ~teamMembers[i].value.toLowerCase().indexOf(searchTerm.toLowerCase()) ||
+                                    ~teamMembers[i].email.toLowerCase().indexOf(searchTerm.toLowerCase())
+                                ) {
+                                    matches.push(teamMembers[i]);
+                                }
+                            }
+                            values = matches;
+                        }
+                        renderList(values, searchTerm);
+                    },
+                    renderItem: function(item, searchTerm) {
+                        return `<div class="mention-item">
+                            <strong>${item.value}</strong>
+                        </div>`;
+                    }
+                }
+            },
+            placeholder: 'Tell us about yourself...',
+        });
+
+        // Set initial content from the database
+        const initialContent = document.getElementById('about_yourself').value;
+        if (initialContent) {
+            quill.root.innerHTML = initialContent;
         }
-    });
-</script>
+
+        // Sync Quill content to hidden input on change
+        quill.on('text-change', function() {
+            const content = quill.root.innerHTML;
+            document.getElementById('about_yourself').value = content;
+        });
+
+        // Add height constraints
+        const editorContainer = document.getElementById('about_yourself_editor');
+        const quillEditor = editorContainer.querySelector('.ql-editor');
+        if (quillEditor) {
+            quillEditor.style.minHeight = '96px';
+            quillEditor.style.maxHeight = '200px';
+            quillEditor.style.overflowY = 'auto';
+        }
+    </script>
 @endpush

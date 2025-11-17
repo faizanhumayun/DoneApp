@@ -55,7 +55,16 @@ class ProjectController extends Controller
         // Get company users for member invitation
         $companyUsers = $company->users()->get();
 
-        return view('projects.create', compact('company', 'workflows', 'companyUsers'));
+        // Transform team members for mentions
+        $teamMembers = $companyUsers->map(function($member) {
+            return [
+                'id' => $member->id,
+                'value' => $member->first_name . ' ' . $member->last_name,
+                'email' => $member->email,
+            ];
+        })->values();
+
+        return view('projects.create', compact('company', 'workflows', 'companyUsers', 'teamMembers'));
     }
 
     /**
@@ -169,9 +178,18 @@ class ProjectController extends Controller
         // Get company users for member invitation
         $companyUsers = $company->users()->get();
 
+        // Transform team members for mentions
+        $teamMembers = $companyUsers->map(function($member) {
+            return [
+                'id' => $member->id,
+                'value' => $member->first_name . ' ' . $member->last_name,
+                'email' => $member->email,
+            ];
+        })->values();
+
         $project->load('users');
 
-        return view('projects.edit', compact('project', 'company', 'workflows', 'companyUsers'));
+        return view('projects.edit', compact('project', 'company', 'workflows', 'companyUsers', 'teamMembers'));
     }
 
     /**

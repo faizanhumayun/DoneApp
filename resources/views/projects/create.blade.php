@@ -136,19 +136,14 @@
                         </div>
 
                         <!-- Project Description -->
-                        <div>
-                            <label for="description" class="block text-sm font-medium mb-2">
-                                Project Description (Optional)
-                            </label>
-                            <textarea
-                                id="description"
-                                name="description"
-                                rows="4"
-                                maxlength="5000"
-                                class="w-full px-4 py-2 border border-[#e3e3e0] dark:border-[#3E3E3A] rounded-sm bg-white dark:bg-[#161615] text-[#1b1b18] dark:text-[#EDEDEC] focus:outline-none focus:ring-2 focus:ring-blue-500 @error('description') border-red-500 @enderror"
-                                placeholder="Describe the project goals and objectives..."
-                            >{{ old('description') }}</textarea>
-                        </div>
+                        <x-quill-editor
+                            name="description"
+                            label="Project Description (Optional)"
+                            :value="old('description', '')"
+                            placeholder="Describe the project goals and objectives..."
+                            height="150px"
+                            :teamMembers="$teamMembers"
+                        />
                     </div>
                 </div>
 

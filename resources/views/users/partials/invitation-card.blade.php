@@ -2,6 +2,13 @@
     $isExpired = $invitation->isTokenExpired();
     $expiresAt = $invitation->invite_token_expires_at;
     $sentAt = $invitation->created_at;
+
+    $roleBadgeColors = [
+        'owner' => 'bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-400',
+        'admin' => 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400',
+        'member' => 'bg-gray-100 dark:bg-gray-900/20 text-gray-800 dark:text-gray-400',
+        'guest' => 'bg-amber-100 dark:bg-amber-900/20 text-amber-800 dark:text-amber-400',
+    ];
 @endphp
 
 <div class="bg-white dark:bg-[#161615] rounded-lg border border-[#e3e3e0] dark:border-[#3E3E3A] p-4 hover:border-[#2E8AF7] hover:shadow-md transition-all" x-data="{ openMenu: false }">
@@ -19,7 +26,10 @@
             <div class="flex-1">
                 <div class="flex items-center gap-2 mb-1">
                     <h3 class="font-semibold text-[#1b1b18] dark:text-[#EDEDEC]">{{ $invitation->invited_email }}</h3>
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $isExpired ? 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400' : 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400' }}">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $roleBadgeColors[$invitation->role ?? 'member'] ?? $roleBadgeColors['member'] }}">
+                        {{ ucfirst($invitation->role ?? 'member') }}
+                    </span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $isExpired ? 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400' : 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400' }}">
                         {{ $isExpired ? 'Expired' : 'Pending' }}
                     </span>
                 </div>

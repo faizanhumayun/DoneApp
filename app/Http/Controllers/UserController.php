@@ -232,7 +232,7 @@ class UserController extends Controller
     }
 
     /**
-     * Send team member invitations.
+     * Send team member invitation.
      */
     public function invite(Request $request): RedirectResponse
     {
@@ -246,80 +246,59 @@ class UserController extends Controller
         }
 
         $validated = $request->validate([
-            'team_emails' => ['nullable', 'array'],
-            'team_emails.*' => ['nullable', 'email', 'max:255'],
+            'email' => ['required', 'email', 'max:255'],
+            'role' => ['required', 'in:owner,admin,member,guest'],
         ]);
 
-        $teamEmails = array_filter($validated['team_emails'] ?? [], fn($email) => !empty($email));
+        $email = $validated['email'];
+        $role = $validated['role'];
 
-        if (empty($teamEmails)) {
-            return back()->withErrors(['team_emails' => 'Please provide at least one email address.']);
+        // Check if user already exists in company
+        $existingUser = User::whereHas('companies', function ($q) use ($company) {
+            $q->where('companies.id', $company->id);
+        })->where('email', $email)->first();
+
+        if ($existingUser) {
+            return back()->withErrors(['email' => 'This email already belongs to a team member.']);
         }
 
-        $invitedCount = 0;
-        $skippedEmails = [];
+        // Check if there's already a pending invitation
+        $existingInvite = Invitation::where('company_id', $company->id)
+            ->where('invited_email', $email)
+            ->where('status', 'pending')
+            ->first();
 
-        DB::transaction(function () use ($teamEmails, $company, $authUser, &$invitedCount, &$skippedEmails) {
-            foreach ($teamEmails as $email) {
-                // Check if user already exists in company
-                $existingUser = User::whereHas('companies', function ($q) use ($company) {
-                    $q->where('companies.id', $company->id);
-                })->where('email', $email)->first();
-
-                if ($existingUser) {
-                    $skippedEmails[] = $email . ' (already a member)';
-                    continue;
-                }
-
-                // Check if there's already a pending invitation
-                $existingInvite = Invitation::where('company_id', $company->id)
-                    ->where('invited_email', $email)
-                    ->where('status', 'pending')
-                    ->first();
-
-                if ($existingInvite && !$existingInvite->isTokenExpired()) {
-                    $skippedEmails[] = $email . ' (already invited)';
-                    continue;
-                }
-
-                // Create invitation
-                $invitation = Invitation::create([
-                    'company_id' => $company->id,
-                    'invited_email' => $email,
-                    'invited_by_user_id' => $authUser->id,
-                    'invite_token' => Invitation::generateToken(),
-                    'invite_token_expires_at' => now()->addDays(7),
-                    'status' => 'pending',
-                ]);
-
-                // Send invitation email
-                Notification::route('mail', $email)
-                    ->notify(new TeamInvitation($invitation));
-
-                // Log email
-                \App\Models\EmailLog::create([
-                    'company_id' => $company->id,
-                    'recipient' => $email,
-                    'subject' => 'Team Invitation',
-                    'type' => 'team-invite',
-                    'status' => 'sent',
-                    'sent_at' => now(),
-                ]);
-
-                $invitedCount++;
-            }
-        });
-
-        $message = $invitedCount > 0
-            ? "Successfully sent {$invitedCount} invitation(s)."
-            : 'No invitations were sent.';
-
-        if (!empty($skippedEmails)) {
-            $message .= ' Skipped: ' . implode(', ', $skippedEmails);
+        if ($existingInvite && !$existingInvite->isTokenExpired()) {
+            return back()->withErrors(['email' => 'An invitation has already been sent to this email address.']);
         }
+
+        // Create invitation
+        $invitation = Invitation::create([
+            'company_id' => $company->id,
+            'invited_email' => $email,
+            'invited_by_user_id' => $authUser->id,
+            'invite_token' => Invitation::generateToken(),
+            'invite_token_expires_at' => now()->addDays(7),
+            'status' => 'pending',
+            'role' => $role,
+        ]);
+
+        // Send invitation email
+        Notification::route('mail', $email)
+            ->notify(new TeamInvitation($invitation));
+
+        // Log email
+        \App\Models\EmailLog::create([
+            'company_id' => $company->id,
+            'recipient' => $email,
+            'subject' => 'Team Invitation',
+            'type' => 'team-invite',
+            'status' => 'sent',
+            'sent_at' => now(),
+        ]);
 
         return redirect()->route('users.index')
-            ->with('success', $message);
+            ->with('success', "Invitation sent to {$email} as {$role}.");
     }
 
     /**

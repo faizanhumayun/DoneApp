@@ -19,7 +19,23 @@ class ProfileController extends Controller
         $user = Auth::user();
         $timezones = config('signup.timezones');
 
-        return view('profile.edit', compact('user', 'timezones'));
+        // Get company team members for mentions
+        $company = $user->companies->first();
+        $teamMembers = $company
+            ? $company->users()
+                ->where('users.id', '!=', $user->id)
+                ->get(['users.id', 'users.first_name', 'users.last_name', 'users.email'])
+                ->map(function($member) {
+                    return [
+                        'id' => $member->id,
+                        'value' => $member->first_name . ' ' . $member->last_name,
+                        'email' => $member->email,
+                    ];
+                })
+                ->values()
+            : collect();
+
+        return view('profile.edit', compact('user', 'timezones', 'teamMembers'));
     }
 
     /**

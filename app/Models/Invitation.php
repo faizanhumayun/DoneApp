@@ -24,6 +24,7 @@ class Invitation extends Model
         'invite_token',
         'invite_token_expires_at',
         'status',
+        'role',
     ];
 
     /**

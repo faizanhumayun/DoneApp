@@ -320,12 +320,13 @@
 
                 <!-- Description Editor -->
                 <div class="description-editor">
-                    <textarea
-                        id="description"
+                    <x-quill-editor
                         name="description"
+                        :value="old('description', '')"
                         placeholder="Write a description..."
-                        class="description-textarea"
-                    >{{ old('description') }}</textarea>
+                        height="250px"
+                        :teamMembers="$teamMembers"
+                    />
                 </div>
 
                 <!-- Task Properties Panel -->

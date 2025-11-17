@@ -56,17 +56,14 @@
                         </div>
 
                         <!-- Description -->
-                        <div>
-                            <label for="workflow_description" class="block text-sm font-medium mb-2">
-                                Description
-                            </label>
-                            <textarea id="workflow_description"
-                                      name="description"
-                                      x-model="form.description"
-                                      rows="3"
-                                      maxlength="1000"
-                                      class="w-full px-4 py-2 border border-[#e3e3e0] dark:border-[#3E3E3A] rounded-sm bg-white dark:bg-[#161615] text-[#1b1b18] dark:text-[#EDEDEC] focus:outline-none focus:ring-2 focus:ring-blue-500">{{ $workflow->description }}</textarea>
-                        </div>
+                        <x-quill-editor
+                            name="description"
+                            label="Description"
+                            :value="old('description', $workflow->description)"
+                            placeholder="Make it short and sweet..."
+                            height="120px"
+                            :teamMembers="$teamMembers"
+                        />
                     </div>
                 </div>
 

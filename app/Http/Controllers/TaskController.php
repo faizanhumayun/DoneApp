@@ -202,7 +202,16 @@ class TaskController extends Controller
         // Get company tags
         $tags = $project->company->tags()->get();
 
-        return view('tasks.create', compact('project', 'projectMembers', 'workflowStatuses', 'tags'));
+        // Transform team members for mentions
+        $teamMembers = $projectMembers->map(function($member) {
+            return [
+                'id' => $member->id,
+                'value' => $member->first_name . ' ' . $member->last_name,
+                'email' => $member->email,
+            ];
+        })->values();
+
+        return view('tasks.create', compact('project', 'projectMembers', 'workflowStatuses', 'tags', 'teamMembers'));
     }
 
     /**
@@ -310,7 +319,16 @@ class TaskController extends Controller
         // Get company tags
         $tags = $project->company->tags()->get();
 
-        return view('tasks.edit', compact('task', 'project', 'projectMembers', 'workflowStatuses', 'tags'));
+        // Transform team members for mentions
+        $teamMembers = $projectMembers->map(function($member) {
+            return [
+                'id' => $member->id,
+                'value' => $member->first_name . ' ' . $member->last_name,
+                'email' => $member->email,
+            ];
+        })->values();
+
+        return view('tasks.edit', compact('task', 'project', 'projectMembers', 'workflowStatuses', 'tags', 'teamMembers'));
     }
 
     /**

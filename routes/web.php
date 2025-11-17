@@ -72,17 +72,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/projects/{project}', [App\Http\Controllers\ProjectController::class, 'show'])->name('projects.show');
 });
 
-// Tasks (View-only for guests, full access for members)
-Route::middleware('auth')->group(function () {
-    // Guests can view tasks index and individual tasks
-    Route::get('/tasks', [App\Http\Controllers\TaskController::class, 'index'])->name('tasks.index');
-    Route::get('/projects/{project}/tasks/{task}', [App\Http\Controllers\TaskController::class, 'show'])->name('tasks.show');
-
-    // Guests can comment on tasks they can access
-    Route::post('/projects/{project}/tasks/{task}/comments', [App\Http\Controllers\TaskCommentController::class, 'store'])->name('task-comments.store');
-});
-
-// Task management (Not accessible to guests)
+// Task management (Not accessible to guests) - MUST come before task view routes
 Route::middleware(['auth', 'ensure.not.guest'])->group(function () {
     Route::get('/projects/{project}/tasks/create', [App\Http\Controllers\TaskController::class, 'create'])->name('tasks.create');
     Route::post('/projects/{project}/tasks', [App\Http\Controllers\TaskController::class, 'store'])->name('tasks.store');
@@ -93,6 +83,16 @@ Route::middleware(['auth', 'ensure.not.guest'])->group(function () {
 
     // Delete comments (guests cannot delete comments)
     Route::delete('/projects/{project}/tasks/{task}/comments/{comment}', [App\Http\Controllers\TaskCommentController::class, 'destroy'])->name('task-comments.destroy');
+});
+
+// Tasks (View-only for guests, full access for members)
+Route::middleware('auth')->group(function () {
+    // Guests can view tasks index and individual tasks
+    Route::get('/tasks', [App\Http\Controllers\TaskController::class, 'index'])->name('tasks.index');
+    Route::get('/projects/{project}/tasks/{task}', [App\Http\Controllers\TaskController::class, 'show'])->name('tasks.show');
+
+    // Guests can comment on tasks they can access
+    Route::post('/projects/{project}/tasks/{task}/comments', [App\Http\Controllers\TaskCommentController::class, 'store'])->name('task-comments.store');
 });
 
 // Profile

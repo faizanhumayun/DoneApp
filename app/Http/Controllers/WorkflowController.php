@@ -45,7 +45,19 @@ class WorkflowController extends Controller
             abort(403, 'You do not have permission to create workflows.');
         }
 
-        return view('workflows.create', compact('company'));
+        // Get company users for mentions
+        $companyUsers = $company->users()->get();
+
+        // Transform team members for mentions
+        $teamMembers = $companyUsers->map(function($member) {
+            return [
+                'id' => $member->id,
+                'value' => $member->first_name . ' ' . $member->last_name,
+                'email' => $member->email,
+            ];
+        })->values();
+
+        return view('workflows.create', compact('company', 'teamMembers'));
     }
 
     /**
@@ -124,7 +136,19 @@ class WorkflowController extends Controller
             $query->orderBy('position');
         }]);
 
-        return view('workflows.edit', compact('workflow', 'company'));
+        // Get company users for mentions
+        $companyUsers = $company->users()->get();
+
+        // Transform team members for mentions
+        $teamMembers = $companyUsers->map(function($member) {
+            return [
+                'id' => $member->id,
+                'value' => $member->first_name . ' ' . $member->last_name,
+                'email' => $member->email,
+            ];
+        })->values();
+
+        return view('workflows.edit', compact('workflow', 'company', 'teamMembers'));
     }
 
     /**

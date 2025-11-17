@@ -126,7 +126,7 @@ class InvitationController extends Controller
             // Associate user with company (if not already)
             if (!$user->companies()->where('company_id', $invitation->company_id)->exists()) {
                 $user->companies()->attach($invitation->company_id, [
-                    'role' => 'member',
+                    'role' => $invitation->role ?? 'member',
                 ]);
             }
 
