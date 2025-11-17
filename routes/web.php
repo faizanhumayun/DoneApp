@@ -74,8 +74,9 @@ Route::middleware('auth')->group(function () {
 
 // Task management (Not accessible to guests) - MUST come before task view routes
 Route::middleware(['auth', 'ensure.not.guest'])->group(function () {
-    Route::get('/projects/{project}/tasks/create', [App\Http\Controllers\TaskController::class, 'create'])->name('tasks.create');
-    Route::post('/projects/{project}/tasks', [App\Http\Controllers\TaskController::class, 'store'])->name('tasks.store');
+    // Create task (with optional project pre-selection)
+    Route::get('/tasks/create/{project?}', [App\Http\Controllers\TaskController::class, 'create'])->name('tasks.create');
+    Route::post('/tasks', [App\Http\Controllers\TaskController::class, 'store'])->name('tasks.store');
     Route::get('/projects/{project}/tasks/{task}/edit', [App\Http\Controllers\TaskController::class, 'edit'])->name('tasks.edit');
     Route::put('/projects/{project}/tasks/{task}', [App\Http\Controllers\TaskController::class, 'update'])->name('tasks.update');
     Route::delete('/projects/{project}/tasks/{task}', [App\Http\Controllers\TaskController::class, 'destroy'])->name('tasks.destroy');

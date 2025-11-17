@@ -22,9 +22,12 @@ class StoreTaskRequest extends FormRequest
      */
     public function rules(): array
     {
-        $project = $this->route('project');
-
         return [
+            'project_id' => [
+                'required',
+                'integer',
+                Rule::exists('projects', 'id'),
+            ],
             'title' => [
                 'required',
                 'string',
@@ -42,9 +45,7 @@ class StoreTaskRequest extends FormRequest
             'workflow_status_id' => [
                 'required',
                 'integer',
-                Rule::exists('workflow_statuses', 'id')
-                    ->where('workflow_id', $project->workflow_id)
-                    ->where('is_active', true),
+                'exists:workflow_statuses,id',
             ],
             'assignee_id' => [
                 'nullable',

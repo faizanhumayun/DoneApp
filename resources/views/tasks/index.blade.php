@@ -20,13 +20,35 @@
         /* Page Header */
         .page-header {
             margin-bottom: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .page-title {
             font-size: 32px;
             font-weight: 600;
             color: #1b1b18;
-            margin-bottom: 8px;
+            margin-bottom: 0;
+        }
+
+        .add-task-btn {
+            background: #1b1b18;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .add-task-btn:hover {
+            background: #000000;
         }
 
         /* Filters Bar */
@@ -464,6 +486,14 @@
             <!-- Page Header -->
             <div class="page-header">
                 <h1 class="page-title">Tasks</h1>
+
+                <!-- Add Task Button -->
+                <a href="{{ route('tasks.create') }}" class="add-task-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    Add Task
+                </a>
             </div>
 
             <!-- Filters Bar -->
@@ -928,5 +958,6 @@
                 window.performAjaxSearch();
             });
         });
+
     </script>
 @endpush

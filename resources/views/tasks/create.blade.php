@@ -37,43 +37,128 @@
             color: #3A3A3A;
         }
 
+        /* Page Title */
+        .page-title-section {
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #F0F0F0;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1b1b18;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: #706f6c;
+        }
+
         /* Project Selector */
+        .project-selector-wrapper {
+            margin-bottom: 32px;
+            padding: 20px;
+            background: #F9F9F9;
+            border-radius: 8px;
+            border: 1px solid #E8E8E8;
+        }
+
+        .project-selector-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #3A3A3A;
+            margin-bottom: 8px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
         .project-selector {
-            width: 240px;
-            margin-bottom: 24px;
+            width: 100%;
+            max-width: 400px;
         }
 
         .project-selector select {
             width: 100%;
             border: 1px solid #D6D6D6;
             border-radius: 6px;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 500;
-            padding: 10px 14px;
+            padding: 12px 14px;
             background: white;
             color: #3A3A3A;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .project-selector select:hover {
+            border-color: #BBBBBB;
+        }
+
+        .project-selector select:focus {
+            outline: 2px solid #7BB3FF;
+            border-color: #7BB3FF;
+        }
+
+        .project-selector select:disabled {
+            background: #F5F5F5;
+            cursor: not-allowed;
+            color: #9B9B9B;
         }
 
         /* Task Title */
-        .task-title-input {
-            width: 100%;
-            font-size: 30px;
+        .task-title-section {
+            margin-bottom: 24px;
+        }
+
+        .task-title-label {
+            font-size: 13px;
             font-weight: 600;
             color: #3A3A3A;
-            border: none;
+            margin-bottom: 8px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .task-title-input {
+            width: 100%;
+            font-size: 24px;
+            font-weight: 600;
+            color: #1b1b18;
+            border: 1px solid #E8E8E8;
+            border-radius: 6px;
             outline: none;
-            padding: 12px 0;
-            margin-bottom: 24px;
-            background: transparent;
+            padding: 14px 16px;
+            background: white;
+            transition: all 0.2s;
         }
 
         .task-title-input::placeholder {
             color: #9B9B9B;
+            font-weight: 500;
+        }
+
+        .task-title-input:focus {
+            border-color: #7BB3FF;
+            outline: 2px solid #7BB3FF;
         }
 
         /* Description Editor */
         .description-editor {
-            margin-bottom: 24px;
+            margin-bottom: 32px;
+        }
+
+        .description-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #3A3A3A;
+            margin-bottom: 8px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .description-textarea {
@@ -99,20 +184,39 @@
         }
 
         /* Task Properties Panel */
+        .properties-panel-wrapper {
+            margin-bottom: 32px;
+        }
+
+        .properties-panel-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #3A3A3A;
+            margin-bottom: 12px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
         .properties-panel {
             background: #FFFFFF;
-            border: 1px dashed #E2E2E2;
+            border: 1px solid #E8E8E8;
             border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 24px;
+            padding: 0;
+            overflow: hidden;
         }
 
         .property-row {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 14px 0;
-            border-bottom: 1px solid #EEEEEE;
+            gap: 16px;
+            padding: 16px 20px;
+            border-bottom: 1px solid #F0F0F0;
+            transition: background 0.2s;
+        }
+
+        .property-row:hover {
+            background: #FAFAFA;
         }
 
         .property-row:last-child {
@@ -128,8 +232,9 @@
 
         .property-label {
             font-size: 14px;
-            color: #3A3A3A;
-            width: 100px;
+            font-weight: 500;
+            color: #1b1b18;
+            width: 110px;
             flex-shrink: 0;
         }
 
@@ -157,16 +262,18 @@
         /* Select Inputs */
         .property-select {
             width: 100%;
-            border: 1px solid #D6D6D6;
+            border: 1px solid #E8E8E8;
             border-radius: 6px;
-            padding: 8px 12px;
+            padding: 10px 14px;
             font-size: 14px;
             background: white;
-            color: #3A3A3A;
+            color: #1b1b18;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
         .property-select:hover {
-            border-color: #BBBBBB;
+            border-color: #D6D6D6;
         }
 
         .property-select:focus {
@@ -174,62 +281,77 @@
             border-color: #7BB3FF;
         }
 
+        .property-select:disabled {
+            background: #F9F9F9;
+            color: #9B9B9B;
+            cursor: not-allowed;
+        }
+
         /* Action Buttons */
         .action-buttons {
             display: flex;
             gap: 12px;
             align-items: center;
-            padding-top: 16px;
-            border-top: 1px solid #EEEEEE;
+            padding-top: 32px;
+            margin-top: 32px;
+            border-top: 2px solid #F0F0F0;
         }
 
         .btn-primary {
-            background: #2E8AF7;
+            background: #1b1b18;
             color: white;
-            font-weight: 500;
-            font-size: 14px;
-            padding: 0 20px;
-            height: 42px;
+            font-weight: 600;
+            font-size: 15px;
+            padding: 0 28px;
+            height: 46px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
         .btn-primary:hover {
-            background: #1E6FD7;
+            background: #000000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .btn-secondary {
             background: white;
-            color: #555555;
-            font-size: 14px;
+            color: #3A3A3A;
+            font-size: 15px;
             font-weight: 500;
-            padding: 0 16px;
-            height: 42px;
-            border: 1px solid #CCCCCC;
+            padding: 0 20px;
+            height: 46px;
+            border: 1px solid #D6D6D6;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
         }
 
         .btn-secondary:hover {
-            background: #F5F5F5;
+            background: #F9F9F9;
+            border-color: #BBBBBB;
         }
 
         .btn-cancel {
             background: none;
             border: none;
-            color: #8A8A8A;
-            font-size: 14px;
-            padding: 0 12px;
+            color: #706f6c;
+            font-size: 15px;
+            font-weight: 500;
+            padding: 0 16px;
             cursor: pointer;
             transition: color 0.2s;
+            text-decoration: none;
+            height: 46px;
+            display: inline-flex;
+            align-items: center;
         }
 
         .btn-cancel:hover {
-            color: #555555;
-            text-decoration: underline;
+            color: #1b1b18;
+            text-decoration: none;
         }
 
         /* Tag Chips */
@@ -279,11 +401,11 @@
     <div class="task-page-container">
         <div class="task-card">
             <!-- Back Button -->
-            <a href="{{ route('projects.show', $project) }}" class="back-button">
+            <a href="{{ $project ? route('projects.show', $project) : route('tasks.index') }}" class="back-button">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                 </svg>
-                <span>Back to Project</span>
+                <span>{{ $project ? 'Back to Project' : 'Back to Tasks' }}</span>
             </a>
 
             <!-- Error Messages -->
@@ -297,40 +419,70 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('tasks.store', $project) }}" x-data="taskForm()">
+            <!-- Page Title -->
+            <div class="page-title-section">
+                <h1 class="page-title">{{ $project ? 'Create Task' : 'Create New Task' }}</h1>
+                <p class="page-subtitle">{{ $project ? 'Add a new task to ' . $project->name : 'Fill in the details below to create a new task' }}</p>
+            </div>
+
+            <form method="POST" action="{{ route('tasks.store') }}" x-data="taskForm()">
                 @csrf
 
                 <!-- Project Selector -->
-                <div class="project-selector">
-                    <select disabled class="property-select">
-                        <option>{{ $project->name }}</option>
-                    </select>
+                <div class="project-selector-wrapper">
+                    <label for="project_id" class="project-selector-label">Project *</label>
+                    <div class="project-selector">
+                        <select
+                            name="project_id"
+                            id="project_id"
+                            required
+                            onchange="handleProjectChange(this.value)"
+                        >
+                            <option value="">Select a project...</option>
+                            @foreach($projects as $proj)
+                                <option value="{{ $proj->id }}" {{ ($project && $project->id == $proj->id) || old('project_id') == $proj->id ? 'selected' : '' }}>
+                                    {{ $proj->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @if(!$project)
+                        <p style="margin-top: 8px; font-size: 13px; color: #706f6c;">
+                            Select a project to load workflow statuses and team members
+                        </p>
+                    @endif
                 </div>
 
                 <!-- Task Title -->
-                <input
-                    type="text"
-                    id="title"
-                    name="title"
-                    value="{{ old('title') }}"
-                    required
-                    placeholder="Enter task title..."
-                    class="task-title-input"
-                >
+                <div class="task-title-section">
+                    <label for="title" class="task-title-label">Task Title *</label>
+                    <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        value="{{ old('title') }}"
+                        required
+                        placeholder="Enter a clear, descriptive title..."
+                        class="task-title-input"
+                    >
+                </div>
 
                 <!-- Description Editor -->
                 <div class="description-editor">
+                    <label class="description-label">Description</label>
                     <x-quill-editor
                         name="description"
                         :value="old('description', '')"
-                        placeholder="Write a description..."
+                        placeholder="Write a detailed description of the task..."
                         height="250px"
                         :teamMembers="$teamMembers"
                     />
                 </div>
 
                 <!-- Task Properties Panel -->
-                <div class="properties-panel">
+                <div class="properties-panel-wrapper">
+                    <label class="properties-panel-title">Task Details</label>
+                    <div class="properties-panel">
                     <!-- Priority -->
                     <div class="property-row">
                         <svg class="property-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -354,13 +506,17 @@
                         </svg>
                         <span class="property-label">Assignee</span>
                         <div class="property-control">
-                            <select id="assignee_id" name="assignee_id" class="assignee-select property-select">
-                                <option value="">Unassigned</option>
-                                @foreach ($projectMembers as $member)
-                                    <option value="{{ $member->id }}" {{ old('assignee_id') == $member->id ? 'selected' : '' }}>
-                                        {{ $member->full_name }}
-                                    </option>
-                                @endforeach
+                            <select id="assignee_id" name="assignee_id" class="assignee-select property-select" {{ $projectMembers->isEmpty() ? 'disabled' : '' }}>
+                                @if($projectMembers->isEmpty())
+                                    <option value="">Select a project first...</option>
+                                @else
+                                    <option value="">Unassigned</option>
+                                    @foreach ($projectMembers as $member)
+                                        <option value="{{ $member->id }}" {{ old('assignee_id') == $member->id ? 'selected' : '' }}>
+                                            {{ $member->full_name }}
+                                        </option>
+                                    @endforeach
+                                @endif
                             </select>
                         </div>
                     </div>
@@ -372,12 +528,16 @@
                         </svg>
                         <span class="property-label">Status</span>
                         <div class="property-control">
-                            <select id="workflow_status_id" name="workflow_status_id" required class="property-select">
-                                @foreach ($workflowStatuses as $status)
-                                    <option value="{{ $status->id }}" {{ old('workflow_status_id') == $status->id ? 'selected' : '' }}>
-                                        {{ $status->name }}
-                                    </option>
-                                @endforeach
+                            <select id="workflow_status_id" name="workflow_status_id" required class="property-select" {{ $workflowStatuses->isEmpty() ? 'disabled' : '' }}>
+                                @if($workflowStatuses->isEmpty())
+                                    <option value="">Select a project first...</option>
+                                @else
+                                    @foreach ($workflowStatuses as $status)
+                                        <option value="{{ $status->id }}" {{ old('workflow_status_id') == $status->id ? 'selected' : '' }}>
+                                            {{ $status->name }}
+                                        </option>
+                                    @endforeach
+                                @endif
                             </select>
                         </div>
                     </div>
@@ -423,14 +583,17 @@
                         </svg>
                         <span class="property-label">Watchers</span>
                         <div class="property-control">
-                            <select id="watchers" name="watchers[]" multiple class="watchers-select">
-                                @foreach ($projectMembers as $member)
-                                    <option value="{{ $member->id }}" {{ $member->id == auth()->id() ? 'selected' : '' }}>
-                                        {{ $member->full_name }}
-                                    </option>
-                                @endforeach
+                            <select id="watchers" name="watchers[]" multiple class="watchers-select" {{ $projectMembers->isEmpty() ? 'disabled' : '' }}>
+                                @if($projectMembers->isNotEmpty())
+                                    @foreach ($projectMembers as $member)
+                                        <option value="{{ $member->id }}" {{ $member->id == auth()->id() ? 'selected' : '' }}>
+                                            {{ $member->full_name }}
+                                        </option>
+                                    @endforeach
+                                @endif
                             </select>
                         </div>
+                    </div>
                     </div>
                 </div>
 
@@ -445,7 +608,7 @@
                     <button type="submit" name="action" value="create_and_copy" class="btn-secondary">
                         Create & copy
                     </button>
-                    <a href="{{ route('projects.show', $project) }}" class="btn-cancel">
+                    <a href="{{ $project ? route('projects.show', $project) : route('tasks.index') }}" class="btn-cancel">
                         Cancel
                     </a>
                 </div>
@@ -484,6 +647,15 @@
                         width: '100%'
                     });
                 }
+            }
+        }
+
+        // Handle project change - reload page with selected project
+        function handleProjectChange(projectId) {
+            if (projectId) {
+                window.location.href = `/tasks/create/${projectId}`;
+            } else {
+                window.location.href = '/tasks/create';
             }
         }
     </script>

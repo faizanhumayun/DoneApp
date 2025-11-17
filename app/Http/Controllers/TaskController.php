@@ -191,19 +191,33 @@ class TaskController extends Controller
     /**
      * Show the form for creating a new task.
      */
-    public function create(Project $project): View
+    public function create(?Project $project = null): View
     {
-        // Get project team members for assignee dropdown
-        $projectMembers = $project->users;
+        $user = Auth::user();
+        $company = $user->companies->first();
 
-        // Get active workflow statuses for the project
-        $workflowStatuses = $project->workflow->statuses()
-            ->where('is_active', true)
-            ->orderBy('position')
-            ->get();
+        if (!$company) {
+            abort(403, 'You must be part of a company to create tasks.');
+        }
+
+        // Get all company projects for the project selector
+        $projects = $company->projects()->orderBy('name')->get();
 
         // Get company tags
-        $tags = $project->company->tags()->get();
+        $tags = $company->tags()->get();
+
+        // If a project is specified, load its related data
+        if ($project) {
+            $projectMembers = $project->users;
+            $workflowStatuses = $project->workflow->statuses()
+                ->where('is_active', true)
+                ->orderBy('position')
+                ->get();
+        } else {
+            // No project selected - use empty collections
+            $projectMembers = collect();
+            $workflowStatuses = collect();
+        }
 
         // Transform team members for mentions
         $teamMembers = $projectMembers->map(function($member) {
@@ -214,14 +228,17 @@ class TaskController extends Controller
             ];
         })->values();
 
-        return view('tasks.create', compact('project', 'projectMembers', 'workflowStatuses', 'tags', 'teamMembers'));
+        return view('tasks.create', compact('project', 'projects', 'projectMembers', 'workflowStatuses', 'tags', 'teamMembers'));
     }
 
     /**
      * Store a newly created task.
      */
-    public function store(StoreTaskRequest $request, Project $project): RedirectResponse
+    public function store(StoreTaskRequest $request): RedirectResponse
     {
+        // Get the project from the validated data
+        $project = Project::findOrFail($request->validated()['project_id']);
+
         $task = $this->taskService->createTask(
             $request->validated(),
             $project,
