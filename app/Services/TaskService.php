@@ -11,7 +11,8 @@ use Illuminate\Support\Str;
 class TaskService
 {
     public function __construct(
-        protected NotificationService $notificationService
+        protected NotificationService $notificationService,
+        protected AttachmentService $attachmentService
     ) {}
 
     /**
@@ -54,6 +55,16 @@ class TaskService
                 "{$user->full_name} created this task."
             );
 
+            // Handle file attachments if provided
+            if (!empty($data['attachments'])) {
+                \Log::info('Processing task attachments', [
+                    'task_id' => $task->id,
+                    'attachments_count' => count($data['attachments']),
+                    'storage_disk' => $data['storage_disk'] ?? 'local'
+                ]);
+                $this->handleAttachments($task, $data['attachments'], $data['storage_disk'] ?? 'local', $user);
+            }
+
             // Notify assignee if task is assigned to someone
             if ($task->assignee_id && $task->assignee_id !== $user->id) {
                 $this->notificationService->createTaskAssignmentNotification(
@@ -64,8 +75,129 @@ class TaskService
                 );
             }
 
-            return $task->load(['project', 'workflowStatus', 'assignee', 'creator', 'tags', 'watchers']);
+            return $task->load(['project', 'workflowStatus', 'assignee', 'creator', 'tags', 'watchers', 'attachments']);
         });
+    }
+
+    /**
+     * Handle file attachments for a task.
+     */
+    protected function handleAttachments(Task $task, array $attachments, string $storageDisk, User $user): void
+    {
+        $successCount = 0;
+        $failureCount = 0;
+
+        foreach ($attachments as $index => $attachmentData) {
+            // Skip empty attachments
+            if (empty($attachmentData)) {
+                continue;
+            }
+
+            \Log::info("Processing attachment #{$index}", [
+                'data_length' => strlen($attachmentData),
+                'is_base64' => strpos($attachmentData, 'data:') === 0,
+            ]);
+
+            // Convert base64 to file
+            if (strpos($attachmentData, 'data:') === 0) {
+                try {
+                    // Decode base64 data
+                    list($type, $data) = explode(';', $attachmentData);
+                    list(, $data) = explode(',', $data);
+                    $decodedData = base64_decode($data);
+
+                    // Extract MIME type
+                    $mimeType = str_replace('data:', '', $type);
+
+                    \Log::info("Decoded attachment #{$index}", [
+                        'mime_type' => $mimeType,
+                        'decoded_size' => strlen($decodedData),
+                    ]);
+
+                    // Generate temp file
+                    $tempFile = tmpfile();
+                    $tempFilePath = stream_get_meta_data($tempFile)['uri'];
+                    fwrite($tempFile, $decodedData);
+
+                    // Create UploadedFile instance
+                    $extension = $this->getExtensionFromMimeType($mimeType);
+                    $uploadedFile = new \Illuminate\Http\UploadedFile(
+                        $tempFilePath,
+                        'file.' . $extension,
+                        $mimeType,
+                        null,
+                        true
+                    );
+
+                    \Log::info("Uploading attachment #{$index}", [
+                        'extension' => $extension,
+                        'storage_disk' => $storageDisk,
+                    ]);
+
+                    // Upload file (pass MIME type to avoid fileinfo dependency)
+                    $attachment = $this->attachmentService->uploadFile(
+                        $uploadedFile,
+                        Task::class,
+                        $task->id,
+                        $user,
+                        $storageDisk,
+                        $mimeType
+                    );
+
+                    \Log::info("Successfully uploaded attachment #{$index}", [
+                        'attachment_id' => $attachment->id,
+                        'file_path' => $attachment->file_path,
+                    ]);
+
+                    $successCount++;
+
+                    // Close temp file
+                    fclose($tempFile);
+                } catch (\Exception $e) {
+                    $failureCount++;
+                    // Log detailed error information
+                    \Log::error("Failed to upload attachment #{$index}: " . $e->getMessage(), [
+                        'exception' => get_class($e),
+                        'message' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                    // Don't fail the entire task creation, just skip this attachment
+                }
+            } else {
+                \Log::warning("Skipping attachment #{$index} - not base64 encoded");
+            }
+        }
+
+        \Log::info('Attachment processing complete', [
+            'task_id' => $task->id,
+            'success_count' => $successCount,
+            'failure_count' => $failureCount,
+        ]);
+    }
+
+    /**
+     * Get file extension from MIME type.
+     */
+    protected function getExtensionFromMimeType(string $mimeType): string
+    {
+        $mimeMap = [
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/gif' => 'gif',
+            'image/webp' => 'webp',
+            'image/svg+xml' => 'svg',
+            'application/pdf' => 'pdf',
+            'application/msword' => 'doc',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+            'application/vnd.ms-excel' => 'xls',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
+            'application/zip' => 'zip',
+            'text/plain' => 'txt',
+        ];
+
+        return $mimeMap[$mimeType] ?? 'bin';
     }
 
     /**

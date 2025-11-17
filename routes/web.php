@@ -207,3 +207,9 @@ Route::middleware(['auth', 'ensure.not.guest'])->prefix('settings')->name('setti
 // Public Access Request Form
 Route::get('/request-access/{companyId}', [App\Http\Controllers\AccessRequestController::class, 'create'])->name('access-requests.create');
 Route::post('/request-access/{companyId}', [App\Http\Controllers\AccessRequestController::class, 'store'])->name('access-requests.store');
+
+// Attachments (Authenticated users only)
+Route::middleware('auth')->prefix('attachments')->name('attachments.')->group(function () {
+    Route::get('/{attachment}/download', [App\Http\Controllers\AttachmentController::class, 'download'])->name('download');
+    Route::delete('/{attachment}', [App\Http\Controllers\AttachmentController::class, 'destroy'])->name('destroy');
+});

@@ -75,6 +75,20 @@ class StoreTaskRequest extends FormRequest
                 'integer',
                 Rule::exists('users', 'id'),
             ],
+            'attachments' => [
+                'nullable',
+                'array',
+                'max:10',
+            ],
+            'attachments.*' => [
+                'nullable',
+                'string',
+            ],
+            'storage_disk' => [
+                'nullable',
+                'string',
+                Rule::in(['local', 'spaces']),
+            ],
         ];
     }
 

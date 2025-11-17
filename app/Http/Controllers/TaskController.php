@@ -236,8 +236,22 @@ class TaskController extends Controller
      */
     public function store(StoreTaskRequest $request): RedirectResponse
     {
+        // Debug: Log incoming request data
+        \Log::info('TaskController::store - Request data', [
+            'has_attachments' => $request->has('attachments'),
+            'attachments_count' => $request->has('attachments') ? count($request->input('attachments', [])) : 0,
+            'storage_disk' => $request->input('storage_disk'),
+            'all_keys' => array_keys($request->all()),
+        ]);
+
         // Get the project from the validated data
         $project = Project::findOrFail($request->validated()['project_id']);
+
+        \Log::info('TaskController::store - Validated data', [
+            'has_attachments' => isset($request->validated()['attachments']),
+            'attachments_count' => isset($request->validated()['attachments']) ? count($request->validated()['attachments']) : 0,
+            'storage_disk' => $request->validated()['storage_disk'] ?? 'not set',
+        ]);
 
         $task = $this->taskService->createTask(
             $request->validated(),
@@ -290,7 +304,8 @@ class TaskController extends Controller
             'tags',
             'watchers',
             'comments.user',
-            'activityLogs.user'
+            'activityLogs.user',
+            'attachments.uploader'
         ]);
 
         // Get project team members for assignee dropdown

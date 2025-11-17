@@ -469,7 +469,6 @@
 
                 <!-- Description Editor -->
                 <div class="description-editor">
-                    <label class="description-label">Description</label>
                     <x-quill-editor
                         name="description"
                         :value="old('description', '')"
@@ -595,6 +594,18 @@
                         </div>
                     </div>
                     </div>
+                </div>
+
+                <!-- Attachments -->
+                <div style="margin-bottom: 32px;">
+                    <label style="font-size: 13px; font-weight: 600; color: #3A3A3A; margin-bottom: 12px; display: block; text-transform: uppercase; letter-spacing: 0.5px;">
+                        Attachments (Optional)
+                    </label>
+                    <x-file-upload
+                        name="attachments"
+                        :storageDisk="old('storage_disk', 'local')"
+                        :multiple="true"
+                    />
                 </div>
 
                 <!-- Action Buttons -->

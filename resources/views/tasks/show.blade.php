@@ -86,6 +86,30 @@
                         @endif
                     </div>
 
+                    <!-- Attachments Section -->
+                    <div class="bg-white dark:bg-[#161615] rounded-lg shadow-sm border border-[#e3e3e0] dark:border-[#3E3E3A] p-6">
+                        <h3 class="text-sm font-semibold text-[#1b1b18] dark:text-[#EDEDEC] uppercase tracking-wide mb-4">
+                            Attachments ({{ $task->attachments->count() }})
+                        </h3>
+
+                        @if($task->attachments->count() > 0)
+                            <x-attachment-list
+                                :attachments="$task->attachments"
+                                :canDelete="in_array($userRole, ['owner', 'admin']) || $task->created_by === auth()->id()"
+                            />
+                        @else
+                            <p class="text-sm text-[#706f6c] dark:text-[#A1A09A] italic">No attachments yet.</p>
+
+                            <!-- Debug Info -->
+                            <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                                <p><strong>Debug Info:</strong></p>
+                                <p>Task ID: {{ $task->id }}</p>
+                                <p>Attachments loaded: {{ $task->relationLoaded('attachments') ? 'Yes' : 'No' }}</p>
+                                <p>Attachments count: {{ $task->attachments->count() }}</p>
+                            </div>
+                        @endif
+                    </div>
+
                     <!-- Comments Section -->
                     <div id="comments" class="bg-white dark:bg-[#161615] rounded-lg shadow-sm border border-[#e3e3e0] dark:border-[#3E3E3A] p-6">
                         <h2 class="text-lg font-semibold mb-4 text-[#1b1b18] dark:text-[#EDEDEC]">

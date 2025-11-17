@@ -117,6 +117,14 @@ class Task extends Model
     }
 
     /**
+     * Get the attachments for the task.
+     */
+    public function attachments(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(Attachment::class, 'attachable');
+    }
+
+    /**
      * Get the priority badge color.
      */
     public function getPriorityColorAttribute(): string
