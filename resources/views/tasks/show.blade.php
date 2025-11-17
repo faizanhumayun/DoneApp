@@ -96,13 +96,13 @@
                         <form method="POST" action="{{ route('task-comments.store', [$project, $task]) }}" class="mb-6">
                             @csrf
                             <div class="mb-3">
-                                <textarea
+                                <x-quill-editor
                                     name="comment"
-                                    rows="3"
-                                    required
-                                    placeholder="Write a comment..."
-                                    class="w-full px-4 py-2 border border-[#e3e3e0] dark:border-[#3E3E3A] rounded-sm bg-white dark:bg-[#161615] text-[#1b1b18] dark:text-[#EDEDEC] focus:ring-2 focus:ring-[#1b1b18] dark:focus:ring-[#EDEDEC] focus:border-transparent"
-                                ></textarea>
+                                    :value="old('comment', '')"
+                                    placeholder="Write a comment... Type @ to mention team members"
+                                    height="120px"
+                                    :teamMembers="$teamMembers"
+                                />
                             </div>
                             <button
                                 type="submit"
@@ -130,7 +130,9 @@
                                                 {{ $comment->created_at->diffForHumans() }}
                                             </span>
                                         </div>
-                                        <p class="text-sm text-[#1b1b18] dark:text-[#EDEDEC] whitespace-pre-wrap">{{ $comment->comment }}</p>
+                                        <div class="text-sm text-[#1b1b18] dark:text-[#EDEDEC] prose prose-sm dark:prose-invert max-w-none">
+                                            {!! $comment->comment !!}
+                                        </div>
 
                                         @if (in_array($userRole, ['owner', 'admin']) || $comment->user_id === auth()->id())
                                             <form method="POST" action="{{ route('task-comments.destroy', [$project, $task, $comment]) }}" class="mt-2">

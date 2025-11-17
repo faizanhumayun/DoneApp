@@ -198,7 +198,21 @@ class DiscussionController extends Controller
                 ->get();
         }
 
-        return view('discussions.show', compact('discussion', 'availableMembers'));
+        // Get all team members for mentions (project or company based)
+        $allMembers = $discussion->project_id
+            ? $discussion->project->users
+            : $discussion->company->users;
+
+        // Transform team members for mentions
+        $teamMembers = $allMembers->map(function($member) {
+            return [
+                'id' => $member->id,
+                'value' => $member->first_name . ' ' . $member->last_name,
+                'email' => $member->email,
+            ];
+        })->values();
+
+        return view('discussions.show', compact('discussion', 'availableMembers', 'teamMembers'));
     }
 
     /**

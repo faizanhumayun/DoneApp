@@ -284,6 +284,15 @@ class TaskController extends Controller
         // Get company tags
         $tags = $project->company->tags()->get();
 
+        // Transform team members for mentions
+        $teamMembers = $projectMembers->map(function($member) {
+            return [
+                'id' => $member->id,
+                'value' => $member->first_name . ' ' . $member->last_name,
+                'email' => $member->email,
+            ];
+        })->values();
+
         // Determine user role in project
         $userRole = $project->users()
             ->where('user_id', Auth::id())
@@ -297,7 +306,8 @@ class TaskController extends Controller
             'projectMembers',
             'workflowStatuses',
             'tags',
-            'userRole'
+            'userRole',
+            'teamMembers'
         ));
     }
 

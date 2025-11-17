@@ -307,6 +307,161 @@
         });
     </script>
 
+    <!-- Session Timeout Warning Modal -->
+    <div id="sessionTimeoutModal"
+         class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center"
+         x-data="{ show: false }"
+         x-show="show"
+         x-cloak>
+        <div class="bg-white dark:bg-[#161615] rounded-lg shadow-xl border border-[#e3e3e0] dark:border-[#3E3E3A] p-6 max-w-md w-full mx-4">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="flex-shrink-0">
+                    <svg class="w-10 h-10 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-[#1b1b18] dark:text-[#EDEDEC]">Session Expiring Soon</h3>
+                    <p class="text-sm text-[#706f6c] dark:text-[#A1A09A]">You will be logged out in <span id="countdown" class="font-bold text-[#1b1b18] dark:text-[#EDEDEC]">60</span> seconds</p>
+                </div>
+            </div>
+            <p class="text-sm text-[#706f6c] dark:text-[#A1A09A] mb-6">
+                Your session is about to expire due to inactivity. Click "Stay Logged In" to continue your session.
+            </p>
+            <div class="flex gap-3">
+                <button
+                    onclick="extendSession()"
+                    class="flex-1 px-4 py-2 bg-[#1b1b18] dark:bg-[#eeeeec] text-white dark:text-[#1C1C1A] hover:bg-black dark:hover:bg-white font-medium rounded-sm transition-all">
+                    Stay Logged In
+                </button>
+                <button
+                    onclick="logoutNow()"
+                    class="flex-1 px-4 py-2 border border-[#e3e3e0] dark:border-[#3E3E3A] text-[#1b1b18] dark:text-[#EDEDEC] hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a] font-medium rounded-sm transition-all">
+                    Logout Now
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Idle Session Timeout Script -->
+    <script>
+        (function() {
+            // Configuration
+            const IDLE_TIMEOUT = 20 * 60 * 1000; // 20 minutes in milliseconds
+            const WARNING_TIME = 19 * 60 * 1000; // 19 minutes - show warning 1 minute before timeout
+
+            let idleTimer = null;
+            let warningTimer = null;
+            let countdownInterval = null;
+            let warningShown = false;
+
+            // Events that indicate user activity
+            const activityEvents = [
+                'mousedown',
+                'mousemove',
+                'keypress',
+                'scroll',
+                'touchstart',
+                'click'
+            ];
+
+            // Show warning modal
+            function showWarning() {
+                if (warningShown) return;
+
+                warningShown = true;
+                const modal = document.getElementById('sessionTimeoutModal');
+                modal.classList.remove('hidden');
+
+                // Start countdown
+                let secondsLeft = 60;
+                const countdownElement = document.getElementById('countdown');
+
+                countdownInterval = setInterval(() => {
+                    secondsLeft--;
+                    countdownElement.textContent = secondsLeft;
+
+                    if (secondsLeft <= 0) {
+                        clearInterval(countdownInterval);
+                        logoutNow();
+                    }
+                }, 1000);
+            }
+
+            // Hide warning modal
+            function hideWarning() {
+                warningShown = false;
+                const modal = document.getElementById('sessionTimeoutModal');
+                modal.classList.add('hidden');
+
+                if (countdownInterval) {
+                    clearInterval(countdownInterval);
+                    countdownInterval = null;
+                }
+            }
+
+            // Extend session (called when user clicks "Stay Logged In")
+            window.extendSession = function() {
+                hideWarning();
+                resetTimers();
+            };
+
+            // Logout immediately
+            window.logoutNow = function() {
+                // Create a form and submit to logout route
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ route('logout') }}';
+
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = '_token';
+                csrfToken.value = '{{ csrf_token() }}';
+
+                form.appendChild(csrfToken);
+                document.body.appendChild(form);
+                form.submit();
+            };
+
+            // Reset all timers
+            function resetTimers() {
+                // Clear existing timers
+                if (idleTimer) clearTimeout(idleTimer);
+                if (warningTimer) clearTimeout(warningTimer);
+                if (countdownInterval) clearInterval(countdownInterval);
+
+                // Hide warning if shown
+                if (warningShown) {
+                    hideWarning();
+                }
+
+                // Set warning timer (19 minutes)
+                warningTimer = setTimeout(() => {
+                    showWarning();
+                }, WARNING_TIME);
+
+                // Set idle timer (20 minutes)
+                idleTimer = setTimeout(() => {
+                    logoutNow();
+                }, IDLE_TIMEOUT);
+            }
+
+            // Setup activity listeners
+            function setupActivityListeners() {
+                activityEvents.forEach(event => {
+                    document.addEventListener(event, resetTimers, true);
+                });
+            }
+
+            // Initialize on page load
+            document.addEventListener('DOMContentLoaded', () => {
+                setupActivityListeners();
+                resetTimers();
+                console.log('Session timeout initialized: 20 minutes idle timeout');
+            });
+        })();
+    </script>
+
     @stack('scripts')
 </body>
 </html>

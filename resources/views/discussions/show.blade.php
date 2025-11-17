@@ -133,16 +133,16 @@
                     <div class="flex gap-3">
                         <img src="{{ auth()->user()->avatar_url }}" alt="{{ auth()->user()->full_name }}" class="w-10 h-10 rounded-full">
                         <div class="flex-1">
-                            <textarea
+                            <x-quill-editor
                                 name="body"
-                                rows="3"
-                                placeholder="Add a comment..."
-                                required
-                                class="w-full px-4 py-3 border border-[#e3e3e0] dark:border-[#3E3E3A] rounded-sm bg-white dark:bg-[#161615] text-[#1b1b18] dark:text-[#EDEDEC] focus:ring-2 focus:ring-[#1b1b18] dark:focus:ring-[#EDEDEC] focus:border-transparent mb-2"
-                            ></textarea>
+                                :value="old('body', '')"
+                                placeholder="Add a comment... Type @ to mention team members"
+                                height="120px"
+                                :teamMembers="$teamMembers"
+                            />
                             <button
                                 type="submit"
-                                class="px-4 py-2 bg-[#1b1b18] dark:bg-[#eeeeec] text-white dark:text-[#1C1C1A] hover:bg-black dark:hover:bg-white font-medium rounded-sm transition-all"
+                                class="mt-2 px-4 py-2 bg-[#1b1b18] dark:bg-[#eeeeec] text-white dark:text-[#1C1C1A] hover:bg-black dark:hover:bg-white font-medium rounded-sm transition-all"
                             >
                                 Post Comment
                             </button>
@@ -178,8 +178,8 @@
                                                 </form>
                                             @endif
                                         </div>
-                                        <div class="text-sm text-[#1b1b18] dark:text-[#EDEDEC]">
-                                            {!! nl2br(e($comment->body)) !!}
+                                        <div class="text-sm text-[#1b1b18] dark:text-[#EDEDEC] prose prose-sm dark:prose-invert max-w-none">
+                                            {!! $comment->body !!}
                                         </div>
                                     </div>
                                 </div>
